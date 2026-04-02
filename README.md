@@ -1,160 +1,117 @@
-# ⭐ Zenith
+# ⭐ Zenith — XLM Payments
 
-A minimal Stellar payment dApp. Send XLM, track transactions, and log payments on-chain via a Soroban smart contract.
+**Live Demo:** [https://zenith-woad.vercel.app/](https://zenith-woad.vercel.app/)
 
----
+Zenith is a focused, high-performance decentralized application (dApp) built for the Stellar network. It provides a clean, zero-noise interface for sending XLM (Stellar Lumens) from any Freighter-connected wallet to any valid Stellar address.
 
-## Live Demo
-
-[https://zenith-stellar.vercel.app](https://zenith-stellar.vercel.app)
-
-> If not yet deployed, this URL will be updated before milestone sign-off.
+Designed with a strict 8pt grid system, Zenith offers a premium user experience with both light and dark mode support, real-time transaction validation, and a seamless payment history overview.
 
 ---
 
-## Demo Video
+## 📸 Demo & Screenshots
 
-[Watch the 1-minute demo on Loom](https://loom.com/share/placeholder)
+### 🎥 Demo Video
+[Watch the 1-minute v1.2 demo on Loom](https://loom.com/share/placeholder)
+> *Covers: Wallet connect, 3-step progress pills, SSE tracker status, and passing Vitest suite.*
 
-> The video covers: wallet connect, sending XLM with the 3-step progress indicator, the tracker confirming a payment, an inline validation error, and `npm test` passing with 3 suites.
-
----
-
-## Features
-
-- Send XLM to any Stellar address with real-time status
-- Track outbound payments with live SSE updates
-- On-chain payment logging via Soroban contract on testnet
+### 🛠️ Visual Polish
+| Landing & Connection | Dashboard & Balance | Success Feedback |
+|---|---|---|
+| ![Landing Page](./screenshots/landing.png) | ![Dashboard](./screenshots/dashboard.png) | ![Success](./screenshots/success.png) |
 
 ---
 
-## Tech Stack
+## 🚀 Key Features
 
-| Layer | Technology |
-|---|---|
-| Framework | React 18 + Vite |
-| Blockchain SDK | `@stellar/stellar-sdk` |
-| Wallet | `@stellar/freighter-api` |
-| Smart Contracts | Soroban (Rust) on Stellar Testnet |
-| Styling | Vanilla CSS (8pt grid system) |
-| Icons | Custom SVG components |
-| State Management | React Context + `useReducer` |
-| Testing | Vitest |
+- **Freighter Wallet Integration:** Securely connect and sign transactions using the [Freighter extension](https://www.freighter.app/).
+- **Production-Grade Loading:** Shimmering skeleton loaders (1.4s) and unified button spinners for all async states.
+- **3-Step Send Flow:** Visual step progress (Contract Recording → Wallet Signing → Network Broadcasting) with pill-shaped indicators.
+- **Real-Time Payment Tracker:** SSE-based status updates for PENDING, CONFIRMED, and FAILED states with a live connectivity indicator.
+- **In-Memory Caching:** High-performance caching layer for account balances (15s), address existence (60s), and contract records.
+- **Smart Validation:** Real-time checks for recipient syntax, account existence, and reserve requirements.
 
 ---
 
-## Getting Started
+## 🛠️ Local Setup
 
 ### Prerequisites
+- Node.js (v18+)
+- [Freighter Wallet Extension](https://www.freighter.app/) (configured to Stellar Testnet)
 
-- Node 18+
-- npm
-- [Freighter browser extension](https://www.freighter.app/) configured to Stellar Testnet
-
-### Local Setup
-
-```bash
-git clone https://github.com/yourusername/zenith
-cd zenith
-npm install
-cp .env.example .env
-# Fill in VITE_WALLETCONNECT_PROJECT_ID and VITE_CONTRACT_ID
-npm run dev
-```
-
-Navigate to `http://localhost:5173`.
+### Installation
+1. **Clone & Install:**
+   ```bash
+   git clone <repository-url>
+   cd Zenith
+   npm install
+   ```
+2. **Environment Setup:**
+   ```bash
+   cp .env.example .env
+   # Add your VITE_WALLETCONNECT_PROJECT_ID and VITE_CONTRACT_ID
+   ```
+3. **Run:**
+   ```bash
+   npm run dev
+   ```
 
 ---
 
-## Environment Variables
+## 🏗️ Technical Stack
 
-| Variable | Required | Description |
+- **Framework:** React 18 + Vite
+- **Blockchain SDK:** `@stellar/stellar-sdk` & `@stellar/freighter-api`
+- **Smart Contracts:** Soroban (Rust) on Stellar Testnet
+- **Testing:** Vitest (13 passing tests)
+- **Styling:** Vanilla CSS (8pt Grid System)
+
+---
+
+## 📜 Soroban Contract
+
+**Contract ID (Testnet):** `CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK`
+
+**Example Contract Call Transaction Hash:**
+[`c0f6bfa592260cb772b5ccb7f743a761520b93f9b20abb26a2985070d3b1306b`](https://stellar.expert/explorer/testnet/tx/c0f6bfa592260cb772b5ccb7f743a761520b93f9b20abb26a2985070d3b1306b)
+
+### Contract Functions
+| Function | Parameters | Description |
 |---|---|---|
-| `VITE_WALLETCONNECT_PROJECT_ID` | Yes | WalletConnect v2 project ID |
-| `VITE_CONTRACT_ID` | Yes | Deployed Soroban contract address on testnet |
-| `VITE_HORIZON_URL` | No | Defaults to `https://horizon-testnet.stellar.org` |
-| `VITE_SOROBAN_RPC_URL` | No | Defaults to `https://soroban-testnet.stellar.org` |
+| `record_payment` | `sender, recipient, amount` | Logs payment intent on-chain; returns unique ID |
+| `get_payment` | `payment_id` | Retrieves a stored payment intent record |
 
-An `.env.example` file is in the repo root with all four variables present but with empty values.
-
----
-
-## Contract
-
-**Contract ID (testnet):** `CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK`
-
-**Network:** Stellar Testnet
-
-**Functions:**
-
-| Function | Parameters | Returns | Description |
-|---|---|---|---|
-| `record_payment` | `sender: Address, recipient: Address, amount: i128` | `u32` | Records a payment intent and returns an auto-incrementing ID |
-| `get_payment` | `payment_id: u32` | `PaymentRecord` | Retrieves a stored payment record by ID |
-
-**How to redeploy:**
-
+### Building & Deploying
 ```bash
-# Requires Rust + stellar CLI
+# Requires Rust + stellar-cli
 cd contracts/payment_record
 cargo build --target wasm32-unknown-unknown --release
-
 stellar contract deploy \
   --wasm target/wasm32-unknown-unknown/release/payment_record.wasm \
-  --source <your-secret-key-or-alias> \
   --network testnet
-
-# Copy the returned contract address into VITE_CONTRACT_ID in your .env
 ```
 
 ---
 
-## Running Tests
+## 🧪 Testing
 
+All critical utilities are covered by a Vitest suite. Run them with:
 ```bash
 npm test
 ```
-
-Expected output: 3 test files, 13 tests passing, 0 failures.
-
-```
-RUN  v4.x
- ✓ src/__tests__/validation.test.ts (5 tests)
- ✓ src/__tests__/format.test.ts (4 tests)
- ✓ src/__tests__/cache.test.ts (4 tests)
-
- Test Files  3 passed (3)
-      Tests  13 passed (13)
-```
+- **validation.test.ts:** 5 cases for address syntax.
+- **format.test.ts:** 4 cases for XLM/Stroop precision.
+- **cache.test.ts:** 4 cases for TTL and invalidation logic.
 
 ---
 
-## Commit History
+## 📜 v1.2 Milestone History
 
-### v1.2 Milestone Commits
-
-**Commit 1 — `feat: implement loading states, skeletons, and send flow progress indicator`**
-Replaced all spinner placeholders with spec-compliant skeleton loaders. Implemented the 3-step horizontal pill progress row in the review modal. Added the SSE connection status indicator to the tracker header. Enforced 150ms/100ms transition timing constants across all animated elements.
-
-**Commit 2 — `feat: add in-memory caching for balance, address existence, and contract records`**
-Extracted `src/lib/cache.js` utility with `get`/`set`/`invalidate` and per-entry TTL. Wired balance fetching with a 15-second TTL and immediate post-send invalidation. Wired address existence checks with a 60-second TTL. Wired immutable contract record caching with infinite TTL.
-
-**Commit 3 — `test: add validation, cache, and amount formatting test suites`**
-`src/__tests__/validation.test.ts` — 5 cases for `isValidStellarAddress`. `src/__tests__/cache.test.ts` — 4 cases for cache get/set/invalidate/TTL with fake timers. `src/__tests__/format.test.ts` — 4 cases for `formatXLM` stroop conversion. All 13 tests pass with `npm test`, zero failures.
-
-**Commit 4 — `docs: add complete README, .env.example, and demo video link`**
-Complete 12-section README with all required content. `.env.example` with all 4 environment variables. Demo video link embedded in section 3.
+- **[f55758e]** `feat: implement loading states, skeletons, and send flow progress indicator`
+- **[ab69cba]** `feat: add in-memory caching for balance, address existence, and contract records`
+- **[bda6d5d]** `test: add validation, cache, and amount formatting test suites`
+- **[32ea4aa]** `docs: add complete README, .env.example, and demo video link`
 
 ---
 
-## Known Limitations
-
-- Testnet contract only — mainnet deployment is not in scope
-- Tracker clears on page reload (sessionStorage)
-- WalletConnect mobile support is best-effort on iOS Safari
-
----
-
-## License
-
-MIT
+## ⚖️ License
+Distributed under the Apache 2.0 License.

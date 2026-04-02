@@ -16,11 +16,13 @@ import { get as cacheGet, set as cacheSet } from '../lib/cache';
 const SOROBAN_RPC_URL = 'https://soroban-testnet.stellar.org';
 const HORIZON_TESTNET_URL = 'https://horizon-testnet.stellar.org';
 const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+const SorobanRpc = StellarSdk.rpc || StellarSdk.SorobanRpc;
 
 /**
  * Contract ID on Soroban testnet.
  * Update this after deploying via `soroban contract deploy`.
  * The contract source is in /contracts/payment_record/src/lib.rs
+ */
 export const CONTRACT_ID = 'CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK';
 
 /**
@@ -28,18 +30,45 @@ export const CONTRACT_ID = 'CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPU
  * This keeps the UX seamless — no second wallet popup.
  * TESTNET ONLY. Never use real keys here.
  */
-const CONTRACT_SIGNER_SECRET = 'SCZANGBA5YHTNYVVV3C7CAZMCLP4FRGQSRCV6VDASGX7QLAGUJI7MEWQ';
+const CONTRACT_SIGNER_SECRET = 'SAI22C2Z2OK53VRGP4W5YNYPAR74YSSAMOFQOER2JYQF4NHPR5GVQUQA';
 
-let contractSignerKeypair = null;
-try {
-  contractSignerKeypair = StellarSdk.Keypair.fromSecret(CONTRACT_SIGNER_SECRET);
-} catch {
-  console.warn('[Soroban] Could not initialize contract signer keypair');
+// Lazy-initialised — deferred until first call so the stellar-sdk and Buffer
+// polyfill are fully ready in the browser context.
+let _contractSignerKeypair = undefined; // undefined = not yet attempted
+let _contractSignerInitError = null;
+
+function getContractSignerKeypair() {
+  if (_contractSignerKeypair !== undefined) return _contractSignerKeypair;
+  try {
+    // Prefer runtime-injected secret (Vite) and normalize accidental whitespace/newlines.
+    const configuredSecret =
+      (typeof import.meta !== 'undefined' ? import.meta?.env?.VITE_CONTRACT_SIGNER_SECRET : null) ||
+      CONTRACT_SIGNER_SECRET;
+    const secret = typeof configuredSecret === 'string' ? configuredSecret.trim() : '';
+
+    if (!secret) {
+      throw new Error('Missing signer secret (set VITE_CONTRACT_SIGNER_SECRET and restart the Vite dev server)');
+    }
+
+    if (!StellarSdk.StrKey.isValidEd25519SecretSeed(secret)) {
+      throw new Error('Invalid Stellar secret seed format/checksum');
+    }
+
+    _contractSignerKeypair = StellarSdk.Keypair.fromSecret(secret);
+  } catch (err) {
+    _contractSignerInitError = err?.message || String(err);
+    console.error('[Soroban] Could not initialize contract signer keypair:', err);
+    _contractSignerKeypair = null;
+  }
+  return _contractSignerKeypair;
 }
 
 // ─── Helper: Get Soroban server ───────────────────────────────
 function getSorobanServer() {
-  return new StellarSdk.SorobanRpc.Server(SOROBAN_RPC_URL);
+  if (!SorobanRpc?.Server) {
+    throw new Error('Soroban RPC client not available in current @stellar/stellar-sdk build');
+  }
+  return new SorobanRpc.Server(SOROBAN_RPC_URL);
 }
 
 // ─── Helper: Convert XLM string to stroops (i128) ─────────────
@@ -62,15 +91,20 @@ function xlmToStroops(xlmAmount) {
  */
 export async function recordPaymentOnContract(senderPublicKey, recipientPublicKey, amount) {
   // If contract signer is not available, return graceful degradation
-  if (!contractSignerKeypair) {
-    return { paymentId: null, success: false, error: 'Contract signer not configured' };
+  const signerKeypair = getContractSignerKeypair();
+  if (!signerKeypair) {
+    return {
+      paymentId: null,
+      success: false,
+      error: _contractSignerInitError || 'Contract signer not configured',
+    };
   }
 
   try {
     const server = getSorobanServer();
 
     // Load the signer's account
-    const signerPublicKey = contractSignerKeypair.publicKey();
+    const signerPublicKey = signerKeypair.publicKey();
     const account = await server.getAccount(signerPublicKey);
 
     // Convert amount to stroops for i128
@@ -96,17 +130,17 @@ export async function recordPaymentOnContract(senderPublicKey, recipientPublicKe
     // Simulate the transaction first
     const simulated = await server.simulateTransaction(tx);
 
-    if (StellarSdk.SorobanRpc.Api.isSimulationError(simulated)) {
+    if (SorobanRpc.Api.isSimulationError(simulated)) {
       const errMsg = simulated.error || 'Simulation failed';
       console.warn('[Soroban] Simulation error:', errMsg);
       return { paymentId: null, success: false, error: errMsg };
     }
 
     // Prepare the transaction with the simulation result
-    const prepared = StellarSdk.SorobanRpc.assembleTransaction(tx, simulated).build();
+    const prepared = SorobanRpc.assembleTransaction(tx, simulated).build();
 
     // Sign with the app keypair
-    prepared.sign(contractSignerKeypair);
+    prepared.sign(signerKeypair);
 
     // Submit
     const sendResponse = await server.sendTransaction(prepared);
@@ -162,10 +196,15 @@ export async function getPaymentFromContract(paymentId) {
     }
 
     const server = getSorobanServer();
-    const signerPublicKey = contractSignerKeypair?.publicKey();
+    const keypair = getContractSignerKeypair();
+    const signerPublicKey = keypair?.publicKey();
 
     if (!signerPublicKey) {
-      return { record: null, success: false, error: 'Contract signer not configured' };
+      return {
+        record: null,
+        success: false,
+        error: _contractSignerInitError || 'Contract signer not configured',
+      };
     }
 
     const account = await server.getAccount(signerPublicKey);
@@ -186,7 +225,7 @@ export async function getPaymentFromContract(paymentId) {
 
     const simulated = await server.simulateTransaction(tx);
 
-    if (StellarSdk.SorobanRpc.Api.isSimulationError(simulated)) {
+    if (SorobanRpc.Api.isSimulationError(simulated)) {
       return { record: null, success: false, error: simulated.error || 'Simulation failed' };
     }
 
