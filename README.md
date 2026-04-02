@@ -1,5 +1,7 @@
 # Zenith — XLM Payments
 
+**Live Demo:** [Link (Optional)](#)
+
 Zenith is a focused, high-performance decentralized application (dApp) built for the Stellar network. It provides a clean, zero-noise interface for sending XLM (Stellar Lumens) from any Freighter-connected wallet to any valid Stellar address.
 
 Designed with a strict 8pt grid system, Zenith offers a premium user experience with both light and dark mode support, real-time transaction validation, and a seamless payment history overview.
@@ -38,6 +40,11 @@ Once connected, Zenith displays the **Wallet connected state** with your availab
 Instant feedback for any broadcasted transaction. The **Successful testnet transaction** shows a success screen and **The transaction result is shown to the user** in the permanent history log beneath the form.
 
 ![Zenith Transaction Success](./screenshots/success.png)
+
+### 4. Wallet Options Available
+Displays the available wallet connection options to the user, specifically Freighter wallet integration.
+
+![Wallet Options](./screenshots/wallet_options.png)
 
 ---
 
@@ -98,6 +105,9 @@ The payment record contract is deployed on the Stellar Soroban testnet. It acts 
 **Contract ID:** `CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK`
 
 **Network:** Soroban Testnet (`https://soroban-testnet.stellar.org`)
+
+**Example Contract Call Transaction Hash:**
+[`c0f6bfa592260cb772b5ccb7f743a761520b93f9b20abb26a2985070d3b1306b`](https://stellar.expert/explorer/testnet/tx/c0f6bfa592260cb772b5ccb7f743a761520b93f9b20abb26a2985070d3b1306b)
 
 **Functions:**
 | Function | Signature | Description |
