@@ -20,8 +20,7 @@ const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
  * Contract ID on Soroban testnet.
  * Update this after deploying via `soroban contract deploy`.
  * The contract source is in /contracts/payment_record/src/lib.rs
- */
-export const CONTRACT_ID = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2RLGN7V6';
+export const CONTRACT_ID = 'CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK';
 
 /**
  * Funded testnet keypair used for signing contract calls.

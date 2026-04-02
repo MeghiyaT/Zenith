@@ -95,7 +95,7 @@ To use Zenith, please ensure your Freighter extension is set to **Test Net**:
 
 The payment record contract is deployed on the Stellar Soroban testnet. It acts as an on-chain log for payment intents and does not hold any funds.
 
-**Contract ID:** `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2RLGN7V6`
+**Contract ID:** `CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK`
 
 **Network:** Soroban Testnet (`https://soroban-testnet.stellar.org`)
 
