@@ -2,6 +2,7 @@
  * Send Form — the primary interaction surface
  * Handles recipient address, amount, memo with real-time validation
  * Triggers review modal, wallet signing, and broadcasting
+ * Integrates with PaymentTracker for real-time status
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useWallet } from '../context/WalletContext';
@@ -14,6 +15,7 @@ import {
   submitTransaction,
   parseHorizonError,
 } from '../utils/stellar';
+import { ERROR_TYPES } from '../hooks/usePaymentTracker';
 import { AlertTriangleIcon, PlusIcon, MinusIcon, SendIcon } from './Icons';
 import ReviewModal from './ReviewModal';
 import SuccessView from './SuccessView';
@@ -29,7 +31,7 @@ const FORM_STATES = {
   ERROR: 'error',
 };
 
-export default function SendForm() {
+export default function SendForm({ tracker }) {
   const { publicKey, accountInfo, signTx, refreshBalance } = useWallet();
 
   // Form fields
@@ -184,6 +186,16 @@ export default function SendForm() {
   const handleConfirm = useCallback(async () => {
     setFormState(FORM_STATES.SIGNING);
 
+    // Create a pending tracker entry
+    let trackerId = null;
+    if (tracker) {
+      trackerId = tracker.addPayment({
+        sender: publicKey,
+        recipient: recipient.trim(),
+        amount: amount,
+      });
+    }
+
     try {
       // Build the transaction
       const transaction = await buildPaymentTransaction(
@@ -196,12 +208,45 @@ export default function SendForm() {
       const xdr = transaction.toXDR();
 
       // Request wallet signature
-      const signedXDR = await signTx(xdr);
+      let signedXDR;
+      try {
+        signedXDR = await signTx(xdr);
+      } catch (signErr) {
+        // Wallet rejected
+        if (tracker && trackerId) {
+          tracker.failPayment(trackerId, ERROR_TYPES.REJECTED);
+        }
+        throw signErr;
+      }
 
       // Submit to Horizon
       setFormState(FORM_STATES.BROADCASTING);
-      const result = await submitTransaction(signedXDR);
-      
+      let result;
+      try {
+        result = await submitTransaction(signedXDR);
+      } catch (submitErr) {
+        // Check specific error types
+        const extras = submitErr?.response?.data?.extras;
+        const resultCodes = extras?.result_codes;
+        const opCode = resultCodes?.operations?.[0];
+
+        if (resultCodes?.transaction === 'tx_bad_auth') {
+          if (tracker && trackerId) tracker.failPayment(trackerId, ERROR_TYPES.REJECTED);
+        } else if (opCode === 'op_no_destination') {
+          if (tracker && trackerId) tracker.failPayment(trackerId, ERROR_TYPES.NO_DESTINATION);
+        } else if (submitErr?.message?.includes('timeout') || submitErr?.message?.includes('network')) {
+          if (tracker && trackerId) tracker.failPayment(trackerId, ERROR_TYPES.NETWORK_TIMEOUT);
+        } else {
+          if (tracker && trackerId) tracker.failPayment(trackerId, ERROR_TYPES.REJECTED);
+        }
+        throw submitErr;
+      }
+
+      // Transaction succeeded
+      if (tracker && trackerId) {
+        tracker.confirmPayment(trackerId, result.hash);
+      }
+
       setTxHash(result.hash);
       setFormState(FORM_STATES.SUCCESS);
 
@@ -218,7 +263,7 @@ export default function SendForm() {
       setTxError(message);
       setFormState(FORM_STATES.ERROR);
     }
-  }, [publicKey, recipient, amount, memo, signTx, refreshBalance]);
+  }, [publicKey, recipient, amount, memo, signTx, refreshBalance, tracker]);
 
   const handleSendAnother = useCallback(() => {
     setRecipient('');

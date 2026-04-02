@@ -133,3 +133,32 @@ export function MinusIcon({ size = 14 }) {
     </svg>
   );
 }
+
+export function ExternalLinkIcon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 8.5v4a1.5 1.5 0 01-1.5 1.5h-7A1.5 1.5 0 012 12.5v-7A1.5 1.5 0 013.5 4H7" />
+      <path d="M10 2h4v4" />
+      <path d="M6.5 9.5L14 2" />
+    </svg>
+  );
+}
+
+export function RefreshCWIcon({ size = 14 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2v4h-4" />
+      <path d="M2 14v-4h4" />
+      <path d="M13.34 6A6 6 0 005 3.34L2 6M2.66 10A6 6 0 0011 12.66L14 10" />
+    </svg>
+  );
+}
+
+export function ChevronIcon({ size = 16, direction = 'down' }) {
+  const rotation = direction === 'up' ? 180 : 0;
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: `rotate(${rotation}deg)`, transition: 'transform 150ms ease' }}>
+      <path d="M4 6l4 4 4-4" />
+    </svg>
+  );
+}

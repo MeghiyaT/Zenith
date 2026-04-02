@@ -1208,3 +1208,382 @@ body {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+/* --- Payment Tracker --- */
+.tracker-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.tracker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+}
+
+.tracker-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.tracker-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 24px 0;
+}
+
+.tracker-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+
+.tracker-add-btn:hover {
+  opacity: 0.8;
+}
+
+/* Watch addresses bar */
+.tracker-watch-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.tracker-watch-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+}
+
+.tracker-watch-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tracker-watch-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background-color: var(--color-accent-subtle);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 12px;
+  transition: border-color 150ms;
+}
+
+.tracker-watch-tag:hover {
+  border-color: var(--color-accent);
+}
+
+.tracker-watch-tag-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.tracker-watch-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px;
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: color 150ms, background-color 150ms;
+}
+
+.tracker-watch-remove:hover {
+  color: var(--color-error);
+  background-color: var(--color-error-subtle);
+}
+
+/* Add watch input */
+.tracker-add-watch {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tracker-add-watch-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tracker-add-watch-input {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+/* Tracker list */
+.tracker-list {
+  border-top: 1px solid var(--color-border);
+}
+
+/* Tracker row — 52px height */
+.tracker-row {
+  padding: 10px 24px;
+  min-height: 52px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.tracker-row:last-child {
+  border-bottom: none;
+}
+
+.tracker-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tracker-row-left {
+  min-width: 0;
+  flex: 1;
+}
+
+.tracker-row-address {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tracker-address-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  cursor: default;
+}
+
+.tracker-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.tracker-amount {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.tracker-separator {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  opacity: 0.5;
+}
+
+.tracker-time {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  cursor: default;
+}
+
+.tracker-contract-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--color-accent);
+  cursor: help;
+}
+
+.tracker-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.status-badge-pending {
+  color: #BA7517;
+  background-color: #FAEEDA;
+}
+
+[data-theme="dark"] .status-badge-pending {
+  color: #E0A820;
+  background-color: rgba(224, 168, 32, 0.15);
+}
+
+.status-badge-confirmed {
+  color: #1D9E75;
+  background-color: var(--color-success-subtle);
+}
+
+[data-theme="dark"] .status-badge-confirmed {
+  color: #2BB888;
+}
+
+.status-badge-failed {
+  color: #D85A30;
+  background-color: var(--color-error-subtle);
+}
+
+[data-theme="dark"] .status-badge-failed {
+  color: #E87050;
+}
+
+/* Explorer link in tracker */
+.tracker-explorer-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: var(--color-text-secondary);
+  border-radius: 4px;
+  transition: color 150ms, background-color 150ms;
+}
+
+.tracker-explorer-link:hover {
+  color: var(--color-accent);
+  background-color: var(--color-accent-subtle);
+}
+
+/* Error message below row */
+.tracker-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--color-error);
+  line-height: 1.3;
+}
+
+.tracker-retry-link {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.tracker-retry-link:hover {
+  opacity: 0.8;
+}
+
+/* Empty state */
+.tracker-empty {
+  padding: 40px 24px;
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+}
+
+.tracker-empty-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+/* Mobile collapsible */
+.tracker-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  color: var(--color-text-primary);
+}
+
+.tracker-toggle-label {
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tracker-toggle-badge {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-accent);
+}
+
+.tracker-collapsible-content {
+  border-top: 1px solid var(--color-border);
+}
+
+/* 150ms fast fade for new rows */
+.fade-in-fast {
+  animation: fade-in-fast 150ms ease;
+}
+
+@keyframes fade-in-fast {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsive tracker adjustments */
+@media (max-width: 640px) {
+  .tracker-row {
+    padding: 10px 16px;
+  }
+
+  .tracker-header {
+    padding: 16px;
+  }
+
+  .tracker-header-actions {
+    padding: 0 16px 0;
+  }
+
+  .tracker-watch-bar {
+    padding: 10px 16px;
+  }
+
+  .tracker-add-watch {
+    padding: 10px 16px;
+  }
+
+  .tracker-empty {
+    padding: 32px 16px;
+  }
+
+  .tracker-toggle {
+    padding: 14px 16px;
+  }
+}
