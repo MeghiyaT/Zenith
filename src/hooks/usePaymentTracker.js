@@ -75,6 +75,9 @@ export default function usePaymentTracker(publicKey, connected) {
   // Track whether the SSE for an address has received at least one event
   const sseAliveRefs = useRef({});
 
+  // SSE Stream state tracking (CONNECTING, LIVE, DISCONNECTED)
+  const [streamState, setStreamState] = useState('DISCONNECTED');
+
   // Persist payments to sessionStorage on change
   useEffect(() => {
     saveToSession(SESSION_PAYMENTS_KEY, payments);
@@ -127,6 +130,7 @@ export default function usePaymentTracker(publicKey, connected) {
       // Start network timeout
       timeoutRefs.current[address] = setTimeout(() => {
         if (!sseAliveRefs.current[address]) {
+          setStreamState('DISCONNECTED');
           // Mark all PENDING payments for this address as timed out
           setPayments(prev => prev.map(p => {
             if (p.recipient === address && p.status === STATUS.PENDING) {
@@ -141,6 +145,10 @@ export default function usePaymentTracker(publicKey, connected) {
           }));
         }
       }, NETWORK_TIMEOUT_MS);
+
+      es.onopen = () => {
+        setStreamState('LIVE');
+      };
 
       es.onmessage = (event) => {
         sseAliveRefs.current[address] = true;
@@ -215,8 +223,15 @@ export default function usePaymentTracker(publicKey, connected) {
 
       es.onerror = () => {
         // If SSE connection drops, start timeout for reconnect detection
+        if (es.readyState === EventSource.CLOSED) {
+          setStreamState('DISCONNECTED');
+        } else if (es.readyState === EventSource.CONNECTING) {
+          setStreamState('CONNECTING');
+        }
+
         if (!timeoutRefs.current[address]) {
           timeoutRefs.current[address] = setTimeout(() => {
+            setStreamState('DISCONNECTED');
             setPayments(prev => prev.map(p => {
               if (p.senderAddress === address && p.status === STATUS.PENDING) {
                 return {
@@ -238,8 +253,12 @@ export default function usePaymentTracker(publicKey, connected) {
 
   // Open SSE streams for user address + watch addresses when connected
   useEffect(() => {
-    if (!connected || !publicKey) return;
+    if (!connected || !publicKey) {
+      setStreamState('DISCONNECTED');
+      return;
+    }
 
+    setStreamState('CONNECTING');
     // Open SSE for user's own address
     openSSE(publicKey);
 
@@ -372,12 +391,20 @@ export default function usePaymentTracker(publicKey, connected) {
       }
       return p;
     }));
+    setStreamState('CONNECTING');
     openSSE(address);
   }, [openSSE]);
+
+  const retryAllStreams = useCallback(() => {
+    setStreamState('CONNECTING');
+    if (publicKey) openSSE(publicKey);
+    watchAddresses.forEach(addr => openSSE(addr));
+  }, [publicKey, watchAddresses, openSSE]);
 
   return {
     payments,
     watchAddresses,
+    streamState,
     addPayment,
     confirmPayment,
     failPayment,
@@ -385,5 +412,6 @@ export default function usePaymentTracker(publicKey, connected) {
     addWatchAddress,
     removeWatchAddress,
     retryStream,
+    retryAllStreams,
   };
 }

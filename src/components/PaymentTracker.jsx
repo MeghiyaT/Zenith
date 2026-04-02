@@ -128,9 +128,11 @@ function TrackerRow({ payment, onRetryStream }) {
 export default function PaymentTracker({
   payments,
   watchAddresses,
+  streamState = 'DISCONNECTED',
   onAddWatchAddress,
   onRemoveWatchAddress,
   onRetryStream,
+  onRetryAllStreams,
 }) {
   const [collapsed, setCollapsed] = useState(true);
   const [showAddWatch, setShowAddWatch] = useState(false);
@@ -186,6 +188,40 @@ export default function PaymentTracker({
 
   // On mobile, render as collapsible
   const showCollapsible = isMobile;
+
+  // SSE Indicator based on streamState per PRD B.4
+  let sseDotClass = '';
+  let sseLabel = '';
+  let sseAction = null;
+
+  if (streamState === 'CONNECTING') {
+    sseDotClass = 'sse-dot-connecting';
+    sseLabel = 'Connecting';
+  } else if (streamState === 'LIVE') {
+    sseDotClass = 'sse-dot-live';
+    sseLabel = 'Live';
+  } else {
+    sseDotClass = 'sse-dot-disconnected';
+    sseLabel = 'Disconnected — Retry';
+    sseAction = onRetryAllStreams;
+  }
+
+  const sseIndicator = (
+    <div className="tracker-sse-indicator">
+      <span className={`sse-dot ${sseDotClass}`} />
+      {sseAction ? (
+        <button
+          className="sse-label-btn"
+          onClick={sseAction}
+          id="sse-retry-btn"
+        >
+          {sseLabel}
+        </button>
+      ) : (
+        <span className="sse-label">{sseLabel}</span>
+      )}
+    </div>
+  );
 
   const trackerContent = (
     <>
@@ -247,11 +283,35 @@ export default function PaymentTracker({
 
       {/* Payment list */}
       {payments.length === 0 ? (
-        <div className="tracker-empty">
-          <p className="tracker-empty-text">
-            No payments yet. Payments you send will appear here.
-          </p>
-        </div>
+        streamState === 'CONNECTING' ? (
+          <div className="tracker-list">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="tracker-row tracker-row-skeleton"
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                <div className="tracker-row-main">
+                  <div className="tracker-row-left">
+                    <div className="tracker-row-address">
+                      <div className="skeleton" style={{ width: 160, height: 16 }} />
+                    </div>
+                    <div className="tracker-row-meta">
+                      <div className="skeleton" style={{ width: 60, height: 16 }} />
+                      <div className="skeleton" style={{ width: 80, height: 16, marginLeft: 6 }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="tracker-empty">
+            <p className="tracker-empty-text">
+              No payments yet. Payments you send will appear here.
+            </p>
+          </div>
+        )
       ) : (
         <div className="tracker-list">
           {payments.map(payment => (
@@ -285,7 +345,8 @@ export default function PaymentTracker({
         </button>
         {!collapsed && (
           <div className="tracker-collapsible-content fade-in">
-            <div className="tracker-header-actions">
+            <div className="tracker-header-actions tracker-header-actions-mobile">
+              {sseIndicator}
               {watchAddresses.length < 5 && !showAddWatch && (
                 <button
                   className="tracker-add-btn"
@@ -308,6 +369,7 @@ export default function PaymentTracker({
       <div className="tracker-header">
         <h2 className="tracker-title">Payment Tracker</h2>
         <div className="tracker-header-actions">
+          {sseIndicator}
           {watchAddresses.length < 5 && !showAddWatch && (
             <button
               className="tracker-add-btn"

@@ -46,9 +46,11 @@ export default function Dashboard() {
           <PaymentTracker
             payments={tracker.payments}
             watchAddresses={tracker.watchAddresses}
+            streamState={tracker.streamState}
             onAddWatchAddress={tracker.addWatchAddress}
             onRemoveWatchAddress={tracker.removeWatchAddress}
             onRetryStream={tracker.retryStream}
+            onRetryAllStreams={tracker.retryAllStreams}
           />
         </div>
         <div className="dashboard-section">
