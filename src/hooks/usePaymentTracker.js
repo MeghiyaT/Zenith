@@ -77,6 +77,8 @@ export default function usePaymentTracker(publicKey, connected) {
 
   // SSE Stream state tracking (CONNECTING, LIVE, DISCONNECTED)
   const [streamState, setStreamState] = useState('DISCONNECTED');
+  const reconnectAttempts = useRef({});
+  const MAX_RECONNECT_ATTEMPTS = 5;
 
   // Persist payments to sessionStorage on change
   useEffect(() => {
@@ -222,28 +224,41 @@ export default function usePaymentTracker(publicKey, connected) {
       };
 
       es.onerror = () => {
-        // If SSE connection drops, start timeout for reconnect detection
-        if (es.readyState === EventSource.CLOSED) {
-          setStreamState('DISCONNECTED');
-        } else if (es.readyState === EventSource.CONNECTING) {
-          setStreamState('CONNECTING');
-        }
+        // If SSE connection drops, start retry detection
+        console.warn(`[SSE] Stream error for ${address}. Attempting reconnect...`);
+        
+        // Track attempts per address
+        const attempts = (reconnectAttempts.current[address] || 0) + 1;
+        reconnectAttempts.current[address] = attempts;
 
-        if (!timeoutRefs.current[address]) {
-          timeoutRefs.current[address] = setTimeout(() => {
-            setStreamState('DISCONNECTED');
-            setPayments(prev => prev.map(p => {
-              if (p.senderAddress === address && p.status === STATUS.PENDING) {
-                return {
-                  ...p,
-                  status: STATUS.FAILED,
-                  errorType: ERROR_TYPES.NETWORK_TIMEOUT,
-                  errorMessage: ERROR_MESSAGES[ERROR_TYPES.NETWORK_TIMEOUT],
-                };
-              }
-              return p;
-            }));
-          }, NETWORK_TIMEOUT_MS);
+        if (attempts <= MAX_RECONNECT_ATTEMPTS) {
+          setStreamState('CONNECTING');
+          const delay = Math.min(1000 * Math.pow(2, attempts), 5000); // Max 5s backoff
+          
+          // Use setTimeout for retry
+          setTimeout(() => {
+            if (connected && (address === publicKey || watchAddresses.includes(address))) {
+               openSSE(address);
+            }
+          }, delay);
+        } else {
+          setStreamState('DISCONNECTED');
+          // If we hit max retries, mark pending ones as timeout
+          if (!timeoutRefs.current[address]) {
+            timeoutRefs.current[address] = setTimeout(() => {
+              setPayments(prev => prev.map(p => {
+                if (p.senderAddress === address && p.status === STATUS.PENDING) {
+                  return {
+                    ...p,
+                    status: STATUS.FAILED,
+                    errorType: ERROR_TYPES.NETWORK_TIMEOUT,
+                    errorMessage: ERROR_MESSAGES[ERROR_TYPES.NETWORK_TIMEOUT],
+                  };
+                }
+                return p;
+              }));
+            }, 1000);
+          }
         }
       };
     } catch {
