@@ -10,6 +10,7 @@
  * The contract ID below should be updated after deployment.
  */
 import * as StellarSdk from '@stellar/stellar-sdk';
+import { get as cacheGet, set as cacheSet } from '../lib/cache';
 
 // ─── Configuration ───────────────────────────────────────────
 const SOROBAN_RPC_URL = 'https://soroban-testnet.stellar.org';
@@ -155,6 +156,11 @@ export async function recordPaymentOnContract(senderPublicKey, recipientPublicKe
  */
 export async function getPaymentFromContract(paymentId) {
   try {
+    const cached = cacheGet(`contract:${paymentId}`);
+    if (cached) {
+      return { record: cached.value, success: true };
+    }
+
     const server = getSorobanServer();
     const signerPublicKey = contractSignerKeypair?.publicKey();
 
@@ -188,6 +194,7 @@ export async function getPaymentFromContract(paymentId) {
     const returnVal = simulated.result?.retval;
     if (returnVal) {
       const record = StellarSdk.scValToNative(returnVal);
+      cacheSet(`contract:${paymentId}`, record, Infinity);
       return { record, success: true };
     }
 

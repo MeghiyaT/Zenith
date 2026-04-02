@@ -5,6 +5,7 @@
  * Integrates with PaymentTracker for real-time status
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { get as cacheGet, set as cacheSet, invalidate as cacheInvalidate } from '../lib/cache';
 import { useWallet } from '../context/WalletContext';
 import {
   isValidStellarAddress,
@@ -89,12 +90,18 @@ export default function SendForm({ tracker }) {
     const trimmed = recipient.trim();
     if (!validateRecipient(trimmed)) return;
 
-    // Check if account exists
+    // Check if account exists — with 60s cache
     if (checkingRecipientRef.current) return;
     checkingRecipientRef.current = true;
     try {
-      const exists = await checkAccountExists(trimmed);
-      setRecipientExists(exists);
+      const cached = cacheGet(`addr:${trimmed}`);
+      if (cached) {
+        setRecipientExists(cached.value.exists);
+      } else {
+        const exists = await checkAccountExists(trimmed);
+        cacheSet(`addr:${trimmed}`, { exists }, 60_000);
+        setRecipientExists(exists);
+      }
     } catch {
       setRecipientExists(null);
     } finally {
@@ -282,6 +289,8 @@ export default function SendForm({ tracker }) {
       setSendStep(0);
       setContractStatus(null);
 
+      // Invalidate balance cache so next fetch is fresh
+      cacheInvalidate(`bal:${publicKey}`);
       window.dispatchEvent(new CustomEvent('stellar-tx-success'));
       setTimeout(() => refreshBalance(), 2000);
     } catch (err) {
@@ -344,10 +353,6 @@ export default function SendForm({ tracker }) {
   }
 
   const isSubmitting = formState === FORM_STATES.SIGNING || formState === FORM_STATES.BROADCASTING;
-  const submitLabel =
-    formState === FORM_STATES.SIGNING ? 'Waiting for wallet...' :
-    formState === FORM_STATES.BROADCASTING ? 'Broadcasting...' :
-    'Confirm and send';
 
   return (
     <>
@@ -518,7 +523,6 @@ export default function SendForm({ tracker }) {
           onConfirm={handleConfirm}
           onCancel={handleCancelReview}
           isSubmitting={isSubmitting}
-          submitLabel={submitLabel}
           exiting={modalExiting}
           sendStep={sendStep}
           contractStatus={contractStatus}

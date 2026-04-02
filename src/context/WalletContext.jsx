@@ -19,6 +19,7 @@ import {
   signTransaction,
 } from '@stellar/freighter-api';
 import { fetchAccount } from '../utils/stellar';
+import { get as cacheGet, set as cacheSet } from '../lib/cache';
 
 const WalletContext = createContext(null);
 
@@ -147,7 +148,14 @@ export function WalletProvider({ children }) {
   const loadBalance = useCallback(async (publicKey) => {
     dispatch({ type: 'BALANCE_LOADING' });
     try {
-      const accountInfo = await fetchAccount(publicKey);
+      const cached = cacheGet(`bal:${publicKey}`);
+      let accountInfo;
+      if (cached) {
+        accountInfo = cached.value;
+      } else {
+        accountInfo = await fetchAccount(publicKey);
+        cacheSet(`bal:${publicKey}`, accountInfo, 15_000);
+      }
       dispatch({ type: 'BALANCE_SUCCESS', payload: accountInfo });
     } catch (err) {
       dispatch({
