@@ -11,7 +11,7 @@ Designed with a strict 8pt grid system, Zenith offers a premium user experience 
 ## 📸 Demo & Screenshots
 
 ### 🎥 Demo Video
-[Watch the 1-minute v1.2 demo on Loom](https://loom.com/share/placeholder)
+[Watch the 1-minute v1.2 demo on Loom](https://www.loom.com/share/bba83a3f3e89489f8118bd3bd3c3475d)
 > *Covers: Wallet connect, 3-step progress pills, SSE tracker status, and passing Vitest suite.*
 
 ### 🛠️ Visual Polish
