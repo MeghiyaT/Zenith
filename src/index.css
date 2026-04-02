@@ -1587,3 +1587,128 @@ body {
     padding: 14px 16px;
   }
 }
+
+/* --- Step Indicator (Review Modal) --- */
+.step-indicator {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  transition: color 150ms ease;
+}
+
+.step-item.step-active {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.step-item.step-done {
+  color: var(--color-success);
+}
+
+.step-item.step-skipped {
+  color: var(--color-warning);
+  opacity: 0.7;
+}
+
+.step-num {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+  background-color: var(--color-border);
+  color: var(--color-text-secondary);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.step-active .step-num {
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent);
+  animation: step-pulse 1.2s ease-in-out infinite;
+}
+
+.step-done .step-num {
+  background-color: var(--color-success-subtle);
+  color: var(--color-success);
+}
+
+.step-skipped .step-num {
+  background-color: var(--color-warning-subtle);
+  color: var(--color-warning);
+}
+
+@keyframes step-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.step-label {
+  line-height: 1.3;
+}
+
+/* --- Network Banner --- */
+.network-banner {
+  background-color: var(--color-accent-subtle);
+  border-bottom: 1px solid var(--color-border);
+  padding: 8px 24px;
+}
+
+.network-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.network-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.network-dot-testnet {
+  background-color: var(--color-success);
+  box-shadow: 0 0 4px var(--color-success);
+}
+
+.network-dot-soroban {
+  background-color: var(--color-accent);
+  box-shadow: 0 0 4px var(--color-accent);
+}
+
+.network-separator {
+  color: var(--color-border);
+  font-size: 10px;
+}
+
+@media (max-width: 480px) {
+  .network-banner {
+    padding: 6px 16px;
+  }
+
+  .network-banner-inner {
+    font-size: 11px;
+    gap: 6px;
+  }
+}

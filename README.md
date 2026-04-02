@@ -13,6 +13,15 @@ Designed with a strict 8pt grid system, Zenith offers a premium user experience 
 - **Transaction History:** Instant feedback and history for incoming and outgoing payments.
 - **Modern Aesthetics:** A premium, responsive UI featuring smooth micro-animations and a dark-first design system.
 
+### v1.1 Features
+
+- **Payment Tracker:** Real-time outbound payment tracking with SSE-based status updates. Tracks PENDING, CONFIRMED, and FAILED statuses with live badge updates — no page reload required.
+- **Watch Addresses:** Monitor up to 5 additional addresses for payment activity during your session.
+- **Error Handling:** Three distinct error types handled in the tracker: wallet rejection, destination not found, and network timeout with manual retry.
+- **Soroban Contract Integration:** On-chain payment intent recording via a Soroban smart contract deployed to testnet. Each payment logs sender, recipient, amount, and timestamp to the contract before the XLM transfer.
+- **3-Step Send Flow:** Visual step progress in the review modal — contract recording → payment signing → network broadcasting.
+- **Network Context Banners:** Persistent banners indicating Stellar Testnet and Soroban Testnet connectivity.
+
 ## 📸 Screenshots
 
 ### 1. Landing & Connection
@@ -77,9 +86,37 @@ To use Zenith, please ensure your Freighter extension is set to **Test Net**:
 
 - **Framework:** React 18 + Vite
 - **Blockchain SDK:** `@stellar/stellar-sdk` & `@stellar/freighter-api`
+- **Smart Contracts:** Soroban (Rust) on Stellar Testnet
 - **Styling:** Vanilla CSS (8pt Grid System)
 - **Icons:** Custom SVG components
 - **State Management:** React Context + `useReducer`
+
+## 📜 Soroban Contract
+
+The payment record contract is deployed on the Stellar Soroban testnet. It acts as an on-chain log for payment intents and does not hold any funds.
+
+**Contract ID:** `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2RLGN7V6`
+
+**Network:** Soroban Testnet (`https://soroban-testnet.stellar.org`)
+
+**Functions:**
+| Function | Signature | Description |
+|---|---|---|
+| `record_payment` | `(sender: Address, recipient: Address, amount: i128) -> u32` | Records a payment intent, returns auto-incrementing ID |
+| `get_payment` | `(payment_id: u32) -> PaymentRecord` | Retrieves a stored payment record by ID |
+
+**Contract source:** [`contracts/payment_record/src/lib.rs`](./contracts/payment_record/src/lib.rs)
+
+### Building the Contract
+
+```bash
+# Requires Rust + soroban-cli
+cd contracts/payment_record
+cargo build --target wasm32-unknown-unknown --release
+soroban contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/payment_record.wasm \
+  --network testnet
+```
 
 ## ⚖️ License
 

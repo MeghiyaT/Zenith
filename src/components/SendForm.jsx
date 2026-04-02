@@ -16,6 +16,7 @@ import {
   parseHorizonError,
 } from '../utils/stellar';
 import { ERROR_TYPES } from '../hooks/usePaymentTracker';
+import { recordPaymentOnContract } from '../utils/soroban';
 import { AlertTriangleIcon, PlusIcon, MinusIcon, SendIcon } from './Icons';
 import ReviewModal from './ReviewModal';
 import SuccessView from './SuccessView';
@@ -51,6 +52,8 @@ export default function SendForm({ tracker }) {
   const [modalExiting, setModalExiting] = useState(false);
   const [txHash, setTxHash] = useState(null);
   const [txError, setTxError] = useState(null);
+  const [sendStep, setSendStep] = useState(0); // 0=none, 1=contract, 2=signing, 3=broadcasting
+  const [contractStatus, setContractStatus] = useState(null); // null | 'pending' | 'confirmed' | 'failed'
 
   // Refs
   const recipientRef = useRef(null);
@@ -185,6 +188,8 @@ export default function SendForm({ tracker }) {
 
   const handleConfirm = useCallback(async () => {
     setFormState(FORM_STATES.SIGNING);
+    setSendStep(1);
+    setContractStatus('pending');
 
     // Create a pending tracker entry
     let trackerId = null;
@@ -197,7 +202,32 @@ export default function SendForm({ tracker }) {
     }
 
     try {
-      // Build the transaction
+      // Step 1: Record payment intent on Soroban contract (best-effort)
+      let contractPaymentId = null;
+      try {
+        const contractResult = await recordPaymentOnContract(
+          publicKey,
+          recipient.trim(),
+          amount
+        );
+        if (contractResult.success && contractResult.paymentId != null) {
+          contractPaymentId = contractResult.paymentId;
+          setContractStatus('confirmed');
+          if (tracker && trackerId) {
+            tracker.setContractId(trackerId, contractPaymentId);
+          }
+        } else {
+          setContractStatus('failed');
+          console.warn('[Contract] Best-effort call failed:', contractResult.error);
+        }
+      } catch (contractErr) {
+        setContractStatus('failed');
+        console.warn('[Contract] Best-effort call failed:', contractErr?.message);
+      }
+
+      // Step 2: Build and sign the payment transaction
+      setSendStep(2);
+
       const transaction = await buildPaymentTransaction(
         publicKey,
         recipient.trim(),
@@ -212,20 +242,20 @@ export default function SendForm({ tracker }) {
       try {
         signedXDR = await signTx(xdr);
       } catch (signErr) {
-        // Wallet rejected
         if (tracker && trackerId) {
           tracker.failPayment(trackerId, ERROR_TYPES.REJECTED);
         }
         throw signErr;
       }
 
-      // Submit to Horizon
+      // Step 3: Broadcast to network
+      setSendStep(3);
       setFormState(FORM_STATES.BROADCASTING);
+
       let result;
       try {
         result = await submitTransaction(signedXDR);
       } catch (submitErr) {
-        // Check specific error types
         const extras = submitErr?.response?.data?.extras;
         const resultCodes = extras?.result_codes;
         const opCode = resultCodes?.operations?.[0];
@@ -249,11 +279,10 @@ export default function SendForm({ tracker }) {
 
       setTxHash(result.hash);
       setFormState(FORM_STATES.SUCCESS);
+      setSendStep(0);
+      setContractStatus(null);
 
-      // Notify other components (e.g. TransactionHistory) to refresh
       window.dispatchEvent(new CustomEvent('stellar-tx-success'));
-
-      // Refresh balance after 2 seconds
       setTimeout(() => refreshBalance(), 2000);
     } catch (err) {
       const message = err?.message?.includes('rejected') || err?.message?.includes('declined')
@@ -262,6 +291,8 @@ export default function SendForm({ tracker }) {
       
       setTxError(message);
       setFormState(FORM_STATES.ERROR);
+      setSendStep(0);
+      setContractStatus(null);
     }
   }, [publicKey, recipient, amount, memo, signTx, refreshBalance, tracker]);
 
@@ -489,6 +520,8 @@ export default function SendForm({ tracker }) {
           isSubmitting={isSubmitting}
           submitLabel={submitLabel}
           exiting={modalExiting}
+          sendStep={sendStep}
+          contractStatus={contractStatus}
         />
       )}
     </>
