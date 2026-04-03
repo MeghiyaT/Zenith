@@ -1,18 +1,18 @@
 # ⭐ Zenith — XLM Payments
 
 **Live Demo:** [https://zenith-woad.vercel.app/](https://zenith-woad.vercel.app/)
+**GitHub Repository:** [https://github.com/MeghiyaT/Zenith](https://github.com/MeghiyaT/Zenith)
 
-Zenith is a focused, high-performance decentralized application (dApp) built for the Stellar network. It provides a clean, zero-noise interface for sending XLM (Stellar Lumens) from any Freighter-connected wallet to any valid Stellar address.
+[![Zenith CI](https://github.com/MeghiyaT/Zenith/actions/workflows/ci.yml/badge.svg)](https://github.com/MeghiyaT/Zenith/actions/workflows/ci.yml)
 
-Designed with a strict 8pt grid system, Zenith offers a premium user experience with both light and dark mode support, real-time transaction validation, and a seamless payment history overview.
+Zenith is a focused, high-performance decentralized application (dApp) built for the Stellar network. It provides a clean, zero-noise interface for sending XLM from any Freighter-connected wallet and interacting with a secure Soroban-based Vault.
 
 ---
 
 ## 📸 Demo & Screenshots
 
-### 🎥 Demo Video
-[Watch the 1-minute v1.2 demo on Loom](https://www.loom.com/share/bba83a3f3e89489f8118bd3bd3c3475d)
-> *Covers: Wallet connect, 3-step progress pills, SSE tracker status, and passing Vitest suite.*
+### 📱 Mobile Responsive View
+<img src="./screenshots/mobile.png" alt="Mobile Responsive View" width="250">
 
 ### 🛠️ Visual Polish
 | Landing & Connection | Dashboard & Balance | Success Feedback |
@@ -27,66 +27,31 @@ Designed with a strict 8pt grid system, Zenith offers a premium user experience 
 - **Production-Grade Loading:** Shimmering skeleton loaders (1.4s) and unified button spinners for all async states.
 - **3-Step Send Flow:** Visual step progress (Contract Recording → Wallet Signing → Network Broadcasting) with pill-shaped indicators.
 - **Zenith Vault (v2.0):** Advanced time-locked savings vault featuring **inter-contract calls** to the Stellar Asset Contract (SAC).
-- **Mobile First Design:** Fully responsive 8pt grid system optimized for both desktop and mobile devices.
-- **CI/CD Pipeline:** Automated GitHub Actions for Rust contract testing and React frontend validation.
-- **Real-Time Payment Tracker:** SSE-based status updates for PENDING, CONFIRMED, and FAILED states with a live connectivity indicator.
-- **In-Memory Caching:** High-performance caching layer for account balances (15s), address existence (60s), and contract records.
+- **Mobile First Design:** Fully responsive 8pt grid system.
+- **CI/CD Pipeline:** Automated GitHub Actions for Rust contract testing and React frontend.
 
 ---
 
-## 🛠️ Local Setup
-
-### Prerequisites
-- Node.js (v18+)
-- Rust (for contract development)
-- [Freighter Wallet Extension](https://www.freighter.app/) (configured to Stellar Testnet)
-
-### Installation
-1. **Clone & Install:**
-   ```bash
-   git clone <repository-url>
-   cd Zenith
-   npm install
-   ```
-2. **Environment Setup:**
-   ```bash
-   cp .env.example .env
-   # Add your VITE_WALLETCONNECT_PROJECT_ID, VITE_CONTRACT_ID, and VITE_VAULT_CONTRACT_ID
-   ```
-3. **Run:**
-   ```bash
-   npm run dev
-   ```
-
----
-
-## 🏗️ Technical Stack
-
-- **Framework:** React 18 + Vite
-- **Blockchain SDK:** `@stellar/stellar-sdk` & `@stellar/freighter-api`
-- **Smart Contracts:** Soroban (Rust) on Stellar Testnet
-- **CI/CD:** GitHub Actions (Contract & Frontend tests)
-- **Testing:** Vitest (Frontend) & Cargo Test (Contracts)
-- **Styling:** Vanilla CSS (8pt Grid System + Responsive Breakpoints)
-
----
-
-## 📜 Soroban Contracts
+## 📜 Soroban Contracts & Addresses
 
 ### 1. Payment Record
-**Contract ID:** `CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK`
+**Contract ID:** `CDNGSYWX7GJEYBO7DG4ZKIMYGEKQT3WUL2B7LWA4LBFIOV2H52ZDKO4C`
+**Deployment Tx:** [dd2952d591b025b725df2d50395c43662af486dac6d3a18cb9570658814cfc57](https://stellar.expert/explorer/testnet/tx/dd2952d591b025b725df2d50395c43662af486dac6d3a18cb9570658814cfc57)
 Logs payment metadata for indexing.
 
-### 2. Zenith Vault (New in v2.0)
-**Contract ID:** `CCVAULT_MOCK_ID_FOR_DEMO`
-Handles time-locked XLM deposits via inter-contract calls to the XLM Stellar Asset Contract (SAC).
+### 2. Zenith Vault (Inter-Contract Calls)
+**Contract ID:** `CANRFTYHEFAZWJ2CKHOBXYZWFUCZCF5SWALAXAODAP4FBDEKME664ZU5`
+**Deployment Tx:** [354b7917aaa4aefb463f54733b893cae8678a3c3ecc875a4f057971fec763f82](https://stellar.expert/explorer/testnet/tx/354b7917aaa4aefb463f54733b893cae8678a3c3ecc875a4f057971fec763f82)
+**Asset Used:** Native XLM Stellar Asset Contract (SAC) `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`
+
+Handles time-locked XLM deposits via inter-contract calls to the Native XLM SAC.
 
 ### Contract Functions (Vault)
 | Function | Parameters | Description |
 |---|---|---|
 | `deposit` | `user, token_id, amount` | Transfers tokens from user to vault (Inter-contract call) |
 | `withdraw` | `user, token_id, amount` | Transfers tokens back to user after 60s lock |
-| `get_balance` | `user` | Returns the vault balance for a specific user |
+| `get_balance` | `user, token_id` | Returns the vault balance for a specific user and token |
 
 ---
 
