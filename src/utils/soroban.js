@@ -22,8 +22,9 @@ const SorobanRpc = StellarSdk.rpc || StellarSdk.SorobanRpc;
  * Update this after deploying via `soroban contract deploy`.
  * The contract source is in /contracts/payment_record/src/lib.rs
  */
-export const CONTRACT_ID = 'CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK';
-export const VAULT_CONTRACT_ID = 'CCLXFNILDKYZOXO26AVT56MRKJSNHF4ZVEZJKNYL3HCL6UBHIXBYOA32'; // Updated after deploy
+// Update these via production environment variables (VITE_CONTRACT_ID, VITE_VAULT_CONTRACT_ID)
+export const CONTRACT_ID = (typeof import.meta !== 'undefined' ? import.meta?.env?.VITE_CONTRACT_ID : null) || 'CDNGSYWX7GJEYBO7DG4ZKIMYGEKQT3WUL2B7LWA4LBFIOV2H52ZDKO4C';
+export const VAULT_CONTRACT_ID = (typeof import.meta !== 'undefined' ? import.meta?.env?.VITE_VAULT_CONTRACT_ID : null) || 'CANRFTYHEFAZWJ2CKHOBXYZWFUCZCF5SWALAXAODAP4FBDEKME664ZU5';
 
 /**
  * ZenithVault: Deposit tokens
@@ -126,8 +127,8 @@ export async function getVaultBalance(userPublicKey) {
     // Native XLM SAC ID on Testnet
     const XLM_SAC_ID = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
-    const mockAccount = new StellarSdk.Account(userPublicKey, '0');
-    const tx = new StellarSdk.TransactionBuilder(mockAccount, {
+    const account = await server.getAccount(userPublicKey);
+    const tx = new StellarSdk.TransactionBuilder(account, {
       fee: '100',
       networkPassphrase: NETWORK_PASSPHRASE,
     })
@@ -142,11 +143,16 @@ export async function getVaultBalance(userPublicKey) {
       .build();
 
     const simulated = await server.simulateTransaction(tx);
-    if (SorobanRpc.Api.isSimulationError(simulated)) return 0;
+    if (SorobanRpc.Api.isSimulationError(simulated)) {
+      console.warn('[Vault] Balance simulation error:', simulated.error || simulated);
+      return 0;
+    }
     
     const returnVal = simulated.result?.retval;
+    console.log('[Vault] Balance fetch result:', returnVal ? StellarSdk.scValToNative(returnVal).toString() : 'None');
     return returnVal ? Number(StellarSdk.scValToNative(returnVal)) / 10_000_000 : 0;
   } catch (err) {
+    console.error('[Vault] getVaultBalance error:', err);
     return 0;
   }
 }
