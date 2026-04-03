@@ -12,7 +12,7 @@ import VaultPanel from './VaultPanel';
 import { AlertTriangleIcon } from './Icons';
 
 export default function Dashboard() {
-  const { isTestnet, publicKey, connected } = useWallet();
+  const { isTestnet } = useWallet();
   const [activeTab, setActiveTab] = useState('send'); // 'send' | 'vault'
 
 

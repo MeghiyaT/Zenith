@@ -1,26 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useWallet } from '../context/WalletContext';
 import { depositToVault, withdrawFromVault, getVaultBalance } from '../utils/soroban';
-import { LockIcon, UnlockIcon, ArrowDownIcon, ArrowUpIcon, InfoIcon } from './Icons';
+import { LockIcon, ArrowDownIcon, ArrowUpIcon, InfoIcon } from './Icons';
 
 export default function VaultPanel() {
   const { publicKey, signTx, refreshBalance } = useWallet();
   const [vaultBalance, setVaultBalance] = useState(0);
   const [amount, setAmount] = useState('');
-  const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(null); // 'deposit' | 'withdraw'
   const [status, setStatus] = useState({ type: '', message: '' });
 
   const fetchVaultBalance = useCallback(async () => {
     if (!publicKey) return;
-    setLoading(true);
     try {
       const bal = await getVaultBalance(publicKey);
       setVaultBalance(bal);
-    } catch (err) {
+    } catch {
       console.warn('Failed to fetch vault balance');
-    } finally {
-      setLoading(false);
     }
   }, [publicKey]);
 
