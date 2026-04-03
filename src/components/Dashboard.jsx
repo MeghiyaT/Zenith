@@ -13,7 +13,14 @@ import { AlertTriangleIcon } from './Icons';
 
 export default function Dashboard() {
   const { isTestnet } = useWallet();
-  const [activeTab, setActiveTab] = useState('send'); // 'send' | 'vault'
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('zenith_active_tab') || 'send';
+  });
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem('zenith_active_tab', tab);
+  };
 
 
   return (
@@ -43,13 +50,13 @@ export default function Dashboard() {
         <div className="tabs-container">
           <button 
             className={`tab-btn ${activeTab === 'send' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('send')}
+            onClick={() => handleTabChange('send')}
           >
             Send
           </button>
           <button 
             className={`tab-btn ${activeTab === 'vault' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('vault')}
+            onClick={() => handleTabChange('vault')}
           >
             Vault
           </button>

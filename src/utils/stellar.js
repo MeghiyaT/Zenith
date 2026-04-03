@@ -239,12 +239,10 @@ export async function fetchPaymentHistory(publicKey, limit = 20) {
   return operations.records
     .filter(r => 
       r.type === 'payment' || 
-      r.type === 'create_account' || 
-      r.type === 'invoke_host_function'
+      r.type === 'create_account'
     )
     .map(record => {
       const isPayment = record.type === 'payment';
-      const isSoroban = record.type === 'invoke_host_function';
       const isIncoming = isPayment
         ? record.to === publicKey
         : record.account === publicKey && record.source_account !== publicKey;
@@ -252,14 +250,14 @@ export async function fetchPaymentHistory(publicKey, limit = 20) {
       return {
         id: record.id,
         type: record.type,
-        from: isPayment ? record.from : (isSoroban ? 'Vault/Contract' : record.source_account),
-        to: isPayment ? record.to : (isSoroban ? 'Soroban' : record.account),
-        amount: isPayment ? record.amount : (record.starting_balance || (isSoroban ? '0' : '0')), // Soroban amounts are harder to extract from generic ops
+        from: isPayment ? record.from : record.source_account,
+        to: isPayment ? record.to : record.account,
+        amount: isPayment ? record.amount : (record.starting_balance || '0'),
         asset: isPayment ? (record.asset_type === 'native' ? 'XLM' : record.asset_code) : 'XLM',
         createdAt: record.created_at,
         hash: record.transaction_hash,
         isIncoming,
-        isContractCall: isSoroban,
+        isContractCall: false,
       };
     });
 }

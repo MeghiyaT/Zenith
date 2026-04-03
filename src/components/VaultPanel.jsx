@@ -33,10 +33,12 @@ export default function VaultPanel() {
     
     const result = await depositToVault(publicKey, amount, signTx);
     if (result.success) {
-      setStatus({ type: 'success', message: 'Successfully deposited to Vault!' });
+      setStatus({ type: 'success', message: 'Successfully deposited! Refreshing balances...' });
       setAmount('');
-      fetchVaultBalance();
-      refreshBalance();
+      await new Promise(r => setTimeout(r, 4500));
+      await fetchVaultBalance();
+      await refreshBalance();
+      setStatus({ type: 'success', message: 'Successfully deposited to Vault!' });
     } else {
       setStatus({ type: 'error', message: result.error || 'Deposit failed' });
     }
@@ -50,10 +52,12 @@ export default function VaultPanel() {
 
     const result = await withdrawFromVault(publicKey, amount, signTx);
     if (result.success) {
-      setStatus({ type: 'success', message: 'Successfully withdrawn from Vault!' });
+      setStatus({ type: 'success', message: 'Successfully withdrawn! Refreshing balances...' });
       setAmount('');
-      fetchVaultBalance();
-      refreshBalance();
+      await new Promise(r => setTimeout(r, 4500));
+      await fetchVaultBalance();
+      await refreshBalance();
+      setStatus({ type: 'success', message: 'Successfully withdrawn from Vault!' });
     } else {
       setStatus({ type: 'error', message: result.error || 'Withdrawal failed' });
     }
