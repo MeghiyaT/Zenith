@@ -23,7 +23,7 @@ const SorobanRpc = StellarSdk.rpc || StellarSdk.SorobanRpc;
  * The contract source is in /contracts/payment_record/src/lib.rs
  */
 // Update these via production environment variables (VITE_CONTRACT_ID, VITE_VAULT_CONTRACT_ID)
-export const CONTRACT_ID = (typeof import.meta !== 'undefined' ? import.meta?.env?.VITE_CONTRACT_ID : null) || 'CDNGSYWX7GJEYBO7DG4ZKIMYGEKQT3WUL2B7LWA4LBFIOV2H52ZDKO4C';
+export const CONTRACT_ID = (typeof import.meta !== 'undefined' ? import.meta?.env?.VITE_CONTRACT_ID : null) || 'CBX7NZ2PDC44A2RMMZFVITG4GPUMOLNNGMY76M67XM6JW4TNZ75MGINZ';
 export const VAULT_CONTRACT_ID = (typeof import.meta !== 'undefined' ? import.meta?.env?.VITE_VAULT_CONTRACT_ID : null) || 'CANRFTYHEFAZWJ2CKHOBXYZWFUCZCF5SWALAXAODAP4FBDEKME664ZU5';
 
 /**

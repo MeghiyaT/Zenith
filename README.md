@@ -76,8 +76,8 @@ Designed with a strict 8pt grid system, Zenith offers a premium user experience 
 ## 📜 Soroban Contracts
 
 ### 1. Payment Record
-**Contract ID:** `CDNGSYWX7GJEYBO7DG4ZKIMYGEKQT3WUL2B7LWA4LBFIOV2H52ZDKO4C`  
-**Deploy TX Hash:** `dd2952d591b025b725df2d50395c43662af486dac6d3a18cb9570658814cfc57`  
+**Contract ID:** `CBX7NZ2PDC44A2RMMZFVITG4GPUMOLNNGMY76M67XM6JW4TNZ75MGINZ`  
+**Deploy TX Hash:** `14e791b96ff9987ed9f1c1a874e8b9444fc70935235858480df3cdd72b80b45d`  
 Logs payment metadata for indexing.
 
 ### 2. Zenith Vault (New in v2.0)

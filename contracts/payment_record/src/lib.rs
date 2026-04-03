@@ -54,8 +54,6 @@ impl PaymentRecordContract {
         recipient: Address,
         amount: i128,
     ) -> u32 {
-        sender.require_auth();
-
         if amount <= 0 {
             panic!("Amount must be positive");
         }
