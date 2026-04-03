@@ -21,7 +21,7 @@ jobs:
       - name: Run Contract Tests
         run: |
           cd contracts/payment_record && cargo test
-          # We will add zenith_vault tests here once created
+          cd ../zenith_vault && cargo test
 
   frontend-tests:
     name: Frontend Tests
