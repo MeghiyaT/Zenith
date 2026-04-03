@@ -33,8 +33,17 @@ impl ZenithVault {
 
         // 3. Set lock-up (e.g., 60 seconds for demo)
         let lock_key = DataKey::LockTime(user.clone(), token_id.clone());
-        let unlock_at = env.ledger().timestamp() + 60; // 1 minute lock
-        env.storage().persistent().set(&lock_key, &unlock_at);
+        let current_unlock: u64 = env.storage().persistent().get(&lock_key).unwrap_or(0);
+        
+        // Anti-Griefing: Only reset the lock if the previous lock has expired!
+        if env.ledger().timestamp() >= current_unlock {
+            let unlock_at = env.ledger().timestamp() + 60; // 1 minute lock
+            env.storage().persistent().set(&lock_key, &unlock_at);
+        }
+
+        // Storage Rent: Bump TTL so active accounts don't expire for ~6+ days
+        env.storage().persistent().extend_ttl(&key, 50_000, 100_000);
+        env.storage().persistent().extend_ttl(&lock_key, 50_000, 100_000);
 
         log!(&env, "Deposit successful: {} tokens", amount);
     }
@@ -67,6 +76,10 @@ impl ZenithVault {
 
         // 4. Update balance
         env.storage().persistent().set(&key, &(current_balance - amount));
+
+        // Storage Rent: Bump TTL on withdrawal
+        env.storage().persistent().extend_ttl(&key, 50_000, 100_000);
+        env.storage().persistent().extend_ttl(&lock_key, 50_000, 100_000);
 
         log!(&env, "Withdrawal successful: {} tokens", amount);
     }

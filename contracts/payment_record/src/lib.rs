@@ -86,6 +86,10 @@ impl PaymentRecordContract {
             .instance()
             .set(&DataKey::Counter, &counter);
 
+        // Storage Rent mitigation: Extend TTL for ~6+ days
+        env.storage().persistent().extend_ttl(&DataKey::Payment(counter), 50_000, 100_000);
+        env.storage().instance().extend_ttl(50_000, 100_000);
+
         log!(&env, "Payment recorded with ID: {}", counter);
 
         counter
