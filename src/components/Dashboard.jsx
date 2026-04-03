@@ -3,6 +3,7 @@
  * Contains balance card, send form, payment tracker, and transaction history
  * Shows network context banners for testnet and Soroban testnet
  */
+import { useState } from 'react';
 import { useWallet } from '../context/WalletContext';
 import BalanceCard from './BalanceCard';
 import SendForm from './SendForm';
@@ -14,6 +15,7 @@ import { AlertTriangleIcon } from './Icons';
 
 export default function Dashboard() {
   const { isTestnet, publicKey, connected } = useWallet();
+  const [activeTab, setActiveTab] = useState('send'); // 'send' | 'vault' | 'tracker'
 
   const tracker = usePaymentTracker(publicKey, connected);
 
@@ -40,26 +42,58 @@ export default function Dashboard() {
 
       <div className="container">
         <BalanceCard />
-        <div className="dashboard-section">
-          <SendForm tracker={tracker} />
+
+        <div className="tabs-container">
+          <button 
+            className={`tab-btn ${activeTab === 'send' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('send')}
+          >
+            Send
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'vault' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('vault')}
+          >
+            Vault
+          </button>
+          <button 
+            className={`tab-btn ${activeTab === 'tracker' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('tracker')}
+          >
+            Tracker
+          </button>
         </div>
-        <div className="dashboard-section">
-          <VaultPanel />
-        </div>
-        <div className="dashboard-section">
-          <PaymentTracker
-            payments={tracker.payments}
-            watchAddresses={tracker.watchAddresses}
-            streamState={tracker.streamState}
-            onAddWatchAddress={tracker.addWatchAddress}
-            onRemoveWatchAddress={tracker.removeWatchAddress}
-            onRetryStream={tracker.retryStream}
-            onRetryAllStreams={tracker.retryAllStreams}
-          />
-        </div>
-        <div className="dashboard-section">
-          <TransactionHistory />
-        </div>
+
+        {activeTab === 'send' && (
+          <div className="fade-in">
+            <div className="dashboard-section">
+              <SendForm tracker={tracker} />
+            </div>
+            <div className="dashboard-section">
+              <TransactionHistory />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'vault' && (
+          <div className="dashboard-section fade-in">
+            <VaultPanel />
+          </div>
+        )}
+
+        {activeTab === 'tracker' && (
+          <div className="dashboard-section fade-in">
+            <PaymentTracker
+              payments={tracker.payments}
+              watchAddresses={tracker.watchAddresses}
+              streamState={tracker.streamState}
+              onAddWatchAddress={tracker.addWatchAddress}
+              onRemoveWatchAddress={tracker.removeWatchAddress}
+              onRetryStream={tracker.retryStream}
+              onRetryAllStreams={tracker.retryAllStreams}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
