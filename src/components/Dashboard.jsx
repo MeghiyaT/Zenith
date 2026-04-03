@@ -8,16 +8,13 @@ import { useWallet } from '../context/WalletContext';
 import BalanceCard from './BalanceCard';
 import SendForm from './SendForm';
 import TransactionHistory from './TransactionHistory';
-import PaymentTracker from './PaymentTracker';
 import VaultPanel from './VaultPanel';
-import usePaymentTracker from '../hooks/usePaymentTracker';
 import { AlertTriangleIcon } from './Icons';
 
 export default function Dashboard() {
   const { isTestnet, publicKey, connected } = useWallet();
-  const [activeTab, setActiveTab] = useState('send'); // 'send' | 'vault' | 'tracker'
+  const [activeTab, setActiveTab] = useState('send'); // 'send' | 'vault'
 
-  const tracker = usePaymentTracker(publicKey, connected);
 
   return (
     <div className="dashboard">
@@ -56,18 +53,12 @@ export default function Dashboard() {
           >
             Vault
           </button>
-          <button 
-            className={`tab-btn ${activeTab === 'tracker' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('tracker')}
-          >
-            Tracker
-          </button>
         </div>
 
         {activeTab === 'send' && (
           <div className="fade-in">
             <div className="dashboard-section">
-              <SendForm tracker={tracker} />
+              <SendForm />
             </div>
             <div className="dashboard-section">
               <TransactionHistory />
@@ -81,19 +72,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {activeTab === 'tracker' && (
-          <div className="dashboard-section fade-in">
-            <PaymentTracker
-              payments={tracker.payments}
-              watchAddresses={tracker.watchAddresses}
-              streamState={tracker.streamState}
-              onAddWatchAddress={tracker.addWatchAddress}
-              onRemoveWatchAddress={tracker.removeWatchAddress}
-              onRetryStream={tracker.retryStream}
-              onRetryAllStreams={tracker.retryAllStreams}
-            />
-          </div>
-        )}
       </div>
     </div>
   );

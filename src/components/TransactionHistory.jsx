@@ -121,17 +121,27 @@ export default function TransactionHistory() {
                   </span>
                   <div>
                     <span className="tx-history-label">
-                      {tx.isIncoming ? 'Received from' : 'Sent to'}
+                      {tx.isContractCall ? (
+                        <span style={{ color: 'var(--color-accent)' }}>Contract Interaction</span>
+                      ) : (
+                        tx.isIncoming ? 'Received from' : 'Sent to'
+                      )}
                     </span>
                     <span className="tx-history-address">
-                      {truncateAddress(tx.isIncoming ? tx.from : tx.to)}
+                      {tx.isIncoming || tx.isContractCall ? truncateAddress(tx.isIncoming ? tx.from : tx.to) : truncateAddress(tx.to)}
                     </span>
                   </div>
                 </div>
                 <div className="tx-history-amount-col">
-                  <span className={`tx-history-amount ${tx.isIncoming ? 'tx-amount-in' : 'tx-amount-out'}`}>
-                    {tx.isIncoming ? '+' : '−'}{formatXLM(tx.amount, 2)} {tx.asset}
-                  </span>
+                  {tx.isContractCall ? (
+                    <span className="text-caption" style={{ background: 'var(--color-bg)', padding: '2px 6px', borderRadius: 4 }}>
+                      Contract Call
+                    </span>
+                  ) : (
+                    <span className={`tx-history-amount ${tx.isIncoming ? 'tx-amount-in' : 'tx-amount-out'}`}>
+                      {tx.isIncoming ? '+' : '−'}{formatXLM(tx.amount, 2)} {tx.asset}
+                    </span>
+                  )}
                   <span className="tx-history-time">{timeAgo(tx.createdAt)}</span>
                 </div>
               </div>

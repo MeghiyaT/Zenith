@@ -16,7 +16,6 @@ import {
   submitTransaction,
   parseHorizonError,
 } from '../utils/stellar';
-import { ERROR_TYPES } from '../hooks/usePaymentTracker';
 import { recordPaymentOnContract } from '../utils/soroban';
 import { AlertTriangleIcon, PlusIcon, MinusIcon, SendIcon } from './Icons';
 import ReviewModal from './ReviewModal';
@@ -33,7 +32,7 @@ const FORM_STATES = {
   ERROR: 'error',
 };
 
-export default function SendForm({ tracker }) {
+export default function SendForm() {
   const { publicKey, accountInfo, signTx, refreshBalance } = useWallet();
 
   // Form fields
@@ -198,15 +197,6 @@ export default function SendForm({ tracker }) {
     setSendStep(1);
     setContractStatus('pending');
 
-    // Create a pending tracker entry
-    let trackerId = null;
-    if (tracker) {
-      trackerId = tracker.addPayment({
-        sender: publicKey,
-        recipient: recipient.trim(),
-        amount: amount,
-      });
-    }
 
     try {
       // Step 1: Record payment intent on Soroban contract (best-effort)
@@ -220,9 +210,6 @@ export default function SendForm({ tracker }) {
         if (contractResult.success && contractResult.paymentId != null) {
           contractPaymentId = contractResult.paymentId;
           setContractStatus('confirmed');
-          if (tracker && trackerId) {
-            tracker.setContractId(trackerId, contractPaymentId);
-          }
         } else {
           setContractStatus('failed');
           console.warn('[Contract] Best-effort call failed:', contractResult.error);
@@ -249,9 +236,6 @@ export default function SendForm({ tracker }) {
       try {
         signedXDR = await signTx(xdr);
       } catch (signErr) {
-        if (tracker && trackerId) {
-          tracker.failPayment(trackerId, ERROR_TYPES.REJECTED);
-        }
         throw signErr;
       }
 
@@ -267,22 +251,9 @@ export default function SendForm({ tracker }) {
         const resultCodes = extras?.result_codes;
         const opCode = resultCodes?.operations?.[0];
 
-        if (resultCodes?.transaction === 'tx_bad_auth') {
-          if (tracker && trackerId) tracker.failPayment(trackerId, ERROR_TYPES.REJECTED);
-        } else if (opCode === 'op_no_destination') {
-          if (tracker && trackerId) tracker.failPayment(trackerId, ERROR_TYPES.NO_DESTINATION);
-        } else if (submitErr?.message?.includes('timeout') || submitErr?.message?.includes('network')) {
-          if (tracker && trackerId) tracker.failPayment(trackerId, ERROR_TYPES.NETWORK_TIMEOUT);
-        } else {
-          if (tracker && trackerId) tracker.failPayment(trackerId, ERROR_TYPES.REJECTED);
-        }
         throw submitErr;
       }
 
-      // Transaction succeeded
-      if (tracker && trackerId) {
-        tracker.confirmPayment(trackerId, result.hash);
-      }
 
       setTxHash(result.hash);
       setFormState(FORM_STATES.SUCCESS);
@@ -303,7 +274,7 @@ export default function SendForm({ tracker }) {
       setSendStep(0);
       setContractStatus(null);
     }
-  }, [publicKey, recipient, amount, memo, signTx, refreshBalance, tracker]);
+  }, [publicKey, recipient, amount, memo, signTx, refreshBalance]);
 
   const handleSendAnother = useCallback(() => {
     setRecipient('');
