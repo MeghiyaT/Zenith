@@ -122,6 +122,7 @@ mod test {
     #[test]
     fn test_record_and_get_payment() {
         let env = Env::default();
+        env.mock_all_auths();
         let contract_id = env.register_contract(None, PaymentRecordContract);
         let client = PaymentRecordContractClient::new(&env, &contract_id);
 
