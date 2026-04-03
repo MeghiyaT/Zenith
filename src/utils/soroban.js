@@ -24,6 +24,126 @@ const SorobanRpc = StellarSdk.rpc || StellarSdk.SorobanRpc;
  * The contract source is in /contracts/payment_record/src/lib.rs
  */
 export const CONTRACT_ID = 'CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK';
+export const VAULT_CONTRACT_ID = 'CCVAULT_MOCK_ID_FOR_DEMO_PURPOSES_RANDOM_CHARS'; // Update after deploy
+
+/**
+ * ZenithVault: Deposit tokens
+ */
+export async function depositToVault(userPublicKey, amount, signTx) {
+  try {
+    const server = getSorobanServer();
+    const account = await server.getAccount(userPublicKey);
+    const stroops = xlmToStroops(amount);
+    const contract = new StellarSdk.Contract(VAULT_CONTRACT_ID);
+
+    // Native XLM SAC ID on Testnet
+    const XLM_SAC_ID = 'CAS3J7AVUOS3MTODCD3573MEXUMZ3GACZHHZ2S37OOBY2V6YV34CO3S4';
+
+    const tx = new StellarSdk.TransactionBuilder(account, {
+      fee: '1000',
+      networkPassphrase: NETWORK_PASSPHRASE,
+    })
+      .addOperation(
+        contract.call(
+          'deposit',
+          StellarSdk.nativeToScVal(userPublicKey, { type: 'address' }),
+          StellarSdk.nativeToScVal(XLM_SAC_ID, { type: 'address' }),
+          StellarSdk.nativeToScVal(stroops, { type: 'i128' }),
+        )
+      )
+      .setTimeout(30)
+      .build();
+
+    const simulated = await server.simulateTransaction(tx);
+    if (SorobanRpc.Api.isSimulationError(simulated)) throw new Error('Simulation failed');
+
+    const prepared = SorobanRpc.assembleTransaction(tx, simulated).build();
+    const signedXDR = await signTx(prepared.toXDR());
+    const signedTx = StellarSdk.TransactionBuilder.fromXDR(signedXDR, NETWORK_PASSPHRASE);
+    
+    const sendResponse = await server.sendTransaction(signedTx);
+    return { success: true, hash: sendResponse.hash };
+  } catch (err) {
+    console.error('[Vault] Deposit error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * ZenithVault: Withdraw tokens
+ */
+export async function withdrawFromVault(userPublicKey, amount, signTx) {
+  try {
+    const server = getSorobanServer();
+    const account = await server.getAccount(userPublicKey);
+    const stroops = xlmToStroops(amount);
+    const contract = new StellarSdk.Contract(VAULT_CONTRACT_ID);
+    const XLM_SAC_ID = 'CAS3J7AVUOS3MTODCD3573MEXUMZ3GACZHHZ2S37OOBY2V6YV34CO3S4';
+
+    const tx = new StellarSdk.TransactionBuilder(account, {
+      fee: '1000',
+      networkPassphrase: NETWORK_PASSPHRASE,
+    })
+      .addOperation(
+        contract.call(
+          'withdraw',
+          StellarSdk.nativeToScVal(userPublicKey, { type: 'address' }),
+          StellarSdk.nativeToScVal(XLM_SAC_ID, { type: 'address' }),
+          StellarSdk.nativeToScVal(stroops, { type: 'i128' }),
+        )
+      )
+      .setTimeout(30)
+      .build();
+
+    const simulated = await server.simulateTransaction(tx);
+    if (SorobanRpc.Api.isSimulationError(simulated)) throw new Error(simulated.error || 'Simulation failed');
+
+    const prepared = SorobanRpc.assembleTransaction(tx, simulated).build();
+    const signedXDR = await signTx(prepared.toXDR());
+    const signedTx = StellarSdk.TransactionBuilder.fromXDR(signedXDR, NETWORK_PASSPHRASE);
+    
+    const sendResponse = await server.sendTransaction(signedTx);
+    return { success: true, hash: sendResponse.hash };
+  } catch (err) {
+    console.error('[Vault] Withdraw error:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * ZenithVault: Get balance
+ */
+export async function getVaultBalance(userPublicKey) {
+  try {
+    const server = getSorobanServer();
+    const contract = new StellarSdk.Contract(VAULT_CONTRACT_ID);
+    
+    // Use a read-only simulation to get balance (simpler than full getAccount for read-only)
+    // Actually, we need an account to simulate. We can use the user's account if we have it, 
+    // or just a mock if we want to be sneaky. But let's use a real simulation.
+    // For read-only, we can just use the server.getLedgerEntries or similar if it's a simple key.
+    // But contract calls are easier.
+    
+    const mockAccount = new StellarSdk.Account(userPublicKey, '0');
+    const tx = new StellarSdk.TransactionBuilder(mockAccount, {
+      fee: '100',
+      networkPassphrase: NETWORK_PASSPHRASE,
+    })
+      .addOperation(
+        contract.call('get_balance', StellarSdk.nativeToScVal(userPublicKey, { type: 'address' }))
+      )
+      .setTimeout(30)
+      .build();
+
+    const simulated = await server.simulateTransaction(tx);
+    if (SorobanRpc.Api.isSimulationError(simulated)) return 0;
+    
+    const returnVal = simulated.result?.retval;
+    return returnVal ? Number(StellarSdk.scValToNative(returnVal)) / 10_000_000 : 0;
+  } catch (err) {
+    return 0;
+  }
+}
 
 /**
  * Funded testnet keypair used for signing contract calls.

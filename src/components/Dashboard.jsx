@@ -8,6 +8,7 @@ import BalanceCard from './BalanceCard';
 import SendForm from './SendForm';
 import TransactionHistory from './TransactionHistory';
 import PaymentTracker from './PaymentTracker';
+import VaultPanel from './VaultPanel';
 import usePaymentTracker from '../hooks/usePaymentTracker';
 import { AlertTriangleIcon } from './Icons';
 
@@ -41,6 +42,9 @@ export default function Dashboard() {
         <BalanceCard />
         <div className="dashboard-section">
           <SendForm tracker={tracker} />
+        </div>
+        <div className="dashboard-section">
+          <VaultPanel />
         </div>
         <div className="dashboard-section">
           <PaymentTracker
