@@ -26,9 +26,11 @@ Designed with a strict 8pt grid system, Zenith offers a premium user experience 
 - **Freighter Wallet Integration:** Securely connect and sign transactions using the [Freighter extension](https://www.freighter.app/).
 - **Production-Grade Loading:** Shimmering skeleton loaders (1.4s) and unified button spinners for all async states.
 - **3-Step Send Flow:** Visual step progress (Contract Recording → Wallet Signing → Network Broadcasting) with pill-shaped indicators.
+- **Zenith Vault (v2.0):** Advanced time-locked savings vault featuring **inter-contract calls** to the Stellar Asset Contract (SAC).
+- **Mobile First Design:** Fully responsive 8pt grid system optimized for both desktop and mobile devices.
+- **CI/CD Pipeline:** Automated GitHub Actions for Rust contract testing and React frontend validation.
 - **Real-Time Payment Tracker:** SSE-based status updates for PENDING, CONFIRMED, and FAILED states with a live connectivity indicator.
 - **In-Memory Caching:** High-performance caching layer for account balances (15s), address existence (60s), and contract records.
-- **Smart Validation:** Real-time checks for recipient syntax, account existence, and reserve requirements.
 
 ---
 
@@ -36,6 +38,7 @@ Designed with a strict 8pt grid system, Zenith offers a premium user experience 
 
 ### Prerequisites
 - Node.js (v18+)
+- Rust (for contract development)
 - [Freighter Wallet Extension](https://www.freighter.app/) (configured to Stellar Testnet)
 
 ### Installation
@@ -48,7 +51,7 @@ Designed with a strict 8pt grid system, Zenith offers a premium user experience 
 2. **Environment Setup:**
    ```bash
    cp .env.example .env
-   # Add your VITE_WALLETCONNECT_PROJECT_ID and VITE_CONTRACT_ID
+   # Add your VITE_WALLETCONNECT_PROJECT_ID, VITE_CONTRACT_ID, and VITE_VAULT_CONTRACT_ID
    ```
 3. **Run:**
    ```bash
@@ -62,54 +65,60 @@ Designed with a strict 8pt grid system, Zenith offers a premium user experience 
 - **Framework:** React 18 + Vite
 - **Blockchain SDK:** `@stellar/stellar-sdk` & `@stellar/freighter-api`
 - **Smart Contracts:** Soroban (Rust) on Stellar Testnet
-- **Testing:** Vitest (13 passing tests)
-- **Styling:** Vanilla CSS (8pt Grid System)
+- **CI/CD:** GitHub Actions (Contract & Frontend tests)
+- **Testing:** Vitest (Frontend) & Cargo Test (Contracts)
+- **Styling:** Vanilla CSS (8pt Grid System + Responsive Breakpoints)
 
 ---
 
-## 📜 Soroban Contract
+## 📜 Soroban Contracts
 
-**Contract ID (Testnet):** `CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK`
+### 1. Payment Record
+**Contract ID:** `CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK`
+Logs payment metadata for indexing.
 
-**Example Contract Call Transaction Hash:**
-[`c0f6bfa592260cb772b5ccb7f743a761520b93f9b20abb26a2985070d3b1306b`](https://stellar.expert/explorer/testnet/tx/c0f6bfa592260cb772b5ccb7f743a761520b93f9b20abb26a2985070d3b1306b)
+### 2. Zenith Vault (New in v2.0)
+**Contract ID:** `CCVAULT_MOCK_ID_FOR_DEMO`
+Handles time-locked XLM deposits via inter-contract calls to the XLM Stellar Asset Contract (SAC).
 
-### Contract Functions
+### Contract Functions (Vault)
 | Function | Parameters | Description |
 |---|---|---|
-| `record_payment` | `sender, recipient, amount` | Logs payment intent on-chain; returns unique ID |
-| `get_payment` | `payment_id` | Retrieves a stored payment intent record |
-
-### Building & Deploying
-```bash
-# Requires Rust + stellar-cli
-cd contracts/payment_record
-cargo build --target wasm32-unknown-unknown --release
-stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/payment_record.wasm \
-  --network testnet
-```
+| `deposit` | `user, token_id, amount` | Transfers tokens from user to vault (Inter-contract call) |
+| `withdraw` | `user, token_id, amount` | Transfers tokens back to user after 60s lock |
+| `get_balance` | `user` | Returns the vault balance for a specific user |
 
 ---
 
-## 🧪 Testing
+## 🧪 Testing & CI/CD
 
-All critical utilities are covered by a Vitest suite. Run them with:
+### Automated Pipeline
+Zenith uses GitHub Actions (`.github/workflows/ci.yml`) to ensure every push is production-ready.
+- **Frontend:** `npm run test` (Vitest)
+- **Contracts:** `cargo test` (Soroban SDK testutils)
+
+### Manual Testing
 ```bash
+# Run contract tests
+cd contracts/zenith_vault && cargo test
+
+# Run frontend tests
 npm test
 ```
-- **validation.test.ts:** 5 cases for address syntax.
-- **format.test.ts:** 4 cases for XLM/Stroop precision.
-- **cache.test.ts:** 4 cases for TTL and invalidation logic.
 
 ---
 
-## 📜 v1.2 Milestone History
+## 📜 Milestone History
 
+### v2.0 — Advanced Ecosystem
+- **[bed1cff]** `feat: implement Zenith Vault UI and frontend integration`
+- **[dc9d9ae]** `style: enhance mobile responsiveness for dashboard and vault`
+- **[241ed9b]** `ci: add zenith ci/cd workflow for contracts and frontend`
+- **[f19e4d3]** `feat: refine vault balance fetching and error handling`
+
+### v1.2 — Production Polish
 - **[f55758e]** `feat: implement loading states, skeletons, and send flow progress indicator`
 - **[ab69cba]** `feat: add in-memory caching for balance, address existence, and contract records`
-- **[bda6d5d]** `test: add validation, cache, and amount formatting test suites`
-- **[32ea4aa]** `docs: add complete README, .env.example, and demo video link`
 
 ---
 
