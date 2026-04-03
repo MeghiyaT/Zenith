@@ -14,9 +14,14 @@ export default function VaultPanel() {
   const fetchVaultBalance = useCallback(async () => {
     if (!publicKey) return;
     setLoading(true);
-    const bal = await getVaultBalance(publicKey);
-    setVaultBalance(bal);
-    setLoading(false);
+    try {
+      const bal = await getVaultBalance(publicKey);
+      setVaultBalance(bal);
+    } catch (err) {
+      console.warn('Failed to fetch vault balance');
+    } finally {
+      setLoading(false);
+    }
   }, [publicKey]);
 
   useEffect(() => {
