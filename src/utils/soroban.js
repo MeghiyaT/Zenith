@@ -14,7 +14,6 @@ import { get as cacheGet, set as cacheSet } from '../lib/cache';
 
 // ─── Configuration ───────────────────────────────────────────
 const SOROBAN_RPC_URL = 'https://soroban-testnet.stellar.org';
-const HORIZON_TESTNET_URL = 'https://horizon-testnet.stellar.org';
 const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 const SorobanRpc = StellarSdk.rpc || StellarSdk.SorobanRpc;
 
@@ -124,13 +123,20 @@ export async function getVaultBalance(userPublicKey) {
     // For read-only, we can just use the server.getLedgerEntries or similar if it's a simple key.
     // But contract calls are easier.
     
+    // Native XLM SAC ID on Testnet
+    const XLM_SAC_ID = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
+
     const mockAccount = new StellarSdk.Account(userPublicKey, '0');
     const tx = new StellarSdk.TransactionBuilder(mockAccount, {
       fee: '100',
       networkPassphrase: NETWORK_PASSPHRASE,
     })
       .addOperation(
-        contract.call('get_balance', StellarSdk.nativeToScVal(userPublicKey, { type: 'address' }))
+        contract.call(
+          'get_balance', 
+          StellarSdk.nativeToScVal(userPublicKey, { type: 'address' }),
+          StellarSdk.nativeToScVal(XLM_SAC_ID, { type: 'address' })
+        )
       )
       .setTimeout(30)
       .build();

@@ -4,8 +4,8 @@ use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, token, log
 /// Storage keys for the vault
 #[contracttype]
 pub enum DataKey {
-    Balance(Address),
-    LockTime(Address),
+    Balance(Address, Address), // (User, Token)
+    LockTime(Address, Address), // (User, Token)
 }
 
 #[contract]
@@ -27,12 +27,12 @@ impl ZenithVault {
         client.transfer(&user, &env.current_contract_address(), &amount);
 
         // 2. Update balance
-        let key = DataKey::Balance(user.clone());
+        let key = DataKey::Balance(user.clone(), token_id.clone());
         let current_balance: i128 = env.storage().persistent().get(&key).unwrap_or(0);
         env.storage().persistent().set(&key, &(current_balance + amount));
 
         // 3. Set lock-up (e.g., 60 seconds for demo)
-        let lock_key = DataKey::LockTime(user.clone());
+        let lock_key = DataKey::LockTime(user.clone(), token_id.clone());
         let unlock_at = env.ledger().timestamp() + 60; // 1 minute lock
         env.storage().persistent().set(&lock_key, &unlock_at);
 
@@ -48,14 +48,14 @@ impl ZenithVault {
 
 
         // 1. Check lock-up
-        let lock_key = DataKey::LockTime(user.clone());
+        let lock_key = DataKey::LockTime(user.clone(), token_id.clone());
         let unlock_at: u64 = env.storage().persistent().get(&lock_key).expect("No lock found");
         if env.ledger().timestamp() < unlock_at {
             panic!("Vault is still locked. Please wait.");
         }
 
         // 2. Check balance
-        let key = DataKey::Balance(user.clone());
+        let key = DataKey::Balance(user.clone(), token_id.clone());
         let current_balance: i128 = env.storage().persistent().get(&key).unwrap_or(0);
         if current_balance < amount {
             panic!("Insufficient balance");
@@ -71,12 +71,12 @@ impl ZenithVault {
         log!(&env, "Withdrawal successful: {} tokens", amount);
     }
 
-    pub fn get_balance(env: Env, user: Address) -> i128 {
-        env.storage().persistent().get(&DataKey::Balance(user)).unwrap_or(0)
+    pub fn get_balance(env: Env, user: Address, token_id: Address) -> i128 {
+        env.storage().persistent().get(&DataKey::Balance(user, token_id)).unwrap_or(0)
     }
 
-    pub fn get_unlock_time(env: Env, user: Address) -> u64 {
-        env.storage().persistent().get(&DataKey::LockTime(user)).unwrap_or(0)
+    pub fn get_unlock_time(env: Env, user: Address, token_id: Address) -> u64 {
+        env.storage().persistent().get(&DataKey::LockTime(user, token_id)).unwrap_or(0)
     }
 }
 

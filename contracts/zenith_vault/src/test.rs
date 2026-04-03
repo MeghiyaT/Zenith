@@ -26,7 +26,7 @@ fn test_vault_deposit_and_withdraw_successful() {
     client.deposit(&user, &token_id, &500);
     assert_eq!(token_client.balance(&user), 500);
     assert_eq!(token_client.balance(&contract_id), 500);
-    assert_eq!(client.get_balance(&user), 500);
+    assert_eq!(client.get_balance(&user, &token_id), 500);
 
     // Fast-forward ledger time to unlock
     env.ledger().with_mut(|li| li.timestamp = 100); 
@@ -34,7 +34,7 @@ fn test_vault_deposit_and_withdraw_successful() {
     // Withdraw from Vault
     client.withdraw(&user, &token_id, &300);
     assert_eq!(token_client.balance(&user), 800);
-    assert_eq!(client.get_balance(&user), 200);
+    assert_eq!(client.get_balance(&user, &token_id), 200);
 }
 
 #[test]
