@@ -17,6 +17,10 @@ impl ZenithVault {
     /// This demonstrates an INTER-CONTRACT CALL to the token contract.
     pub fn deposit(env: Env, user: Address, token_id: Address, amount: i128) {
         user.require_auth();
+        if amount <= 0 {
+            panic!("Amount must be positive");
+        }
+
 
         // 1. Inter-contract call: Transfer from user to this contract
         let client = token::TokenClient::new(&env, &token_id);
@@ -38,6 +42,10 @@ impl ZenithVault {
     /// Withdraw tokens from the vault.
     pub fn withdraw(env: Env, user: Address, token_id: Address, amount: i128) {
         user.require_auth();
+        if amount <= 0 {
+            panic!("Amount must be positive");
+        }
+
 
         // 1. Check lock-up
         let lock_key = DataKey::LockTime(user.clone());

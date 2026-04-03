@@ -54,6 +54,12 @@ impl PaymentRecordContract {
         recipient: Address,
         amount: i128,
     ) -> u32 {
+        sender.require_auth();
+
+        if amount <= 0 {
+            panic!("Amount must be positive");
+        }
+
         // Get and increment the counter
         let mut counter: u32 = env
             .storage()
