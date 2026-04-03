@@ -1,0 +1,40 @@
+name: Zenith CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  contract-tests:
+    name: Soroban Contract Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7m-none-eabi
+      - name: Install Soroban SDK tools
+        run: cargo install --locked soroban-cli || true
+      - name: Run Contract Tests
+        run: |
+          cd contracts/payment_record && cargo test
+          # We will add zenith_vault tests here once created
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install Dependencies
+        run: npm install
+      - name: Run Vitest
+        run: npm run test
+      - name: Build
+        run: npm run build
