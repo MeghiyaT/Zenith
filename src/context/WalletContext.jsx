@@ -19,7 +19,7 @@ import {
   signTransaction,
 } from '@stellar/freighter-api';
 import { fetchAccount } from '../utils/stellar';
-import { get as cacheGet, set as cacheSet } from '../lib/cache';
+import { get as cacheGet, set as cacheSet, invalidate as cacheInvalidate } from '../lib/cache';
 
 const WalletContext = createContext(null);
 
@@ -225,6 +225,7 @@ export function WalletProvider({ children }) {
 
   const refreshBalance = useCallback(() => {
     if (state.publicKey) {
+      cacheInvalidate(`bal:${state.publicKey}`);
       loadBalance(state.publicKey);
     }
   }, [state.publicKey, loadBalance]);

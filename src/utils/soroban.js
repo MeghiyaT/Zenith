@@ -24,7 +24,7 @@ const SorobanRpc = StellarSdk.rpc || StellarSdk.SorobanRpc;
  * The contract source is in /contracts/payment_record/src/lib.rs
  */
 export const CONTRACT_ID = 'CDQK7PDQQIDV25QN6XDEGFD3SADJCXIT5KAJ566OBGUBGWA74MPUTQUK';
-export const VAULT_CONTRACT_ID = 'CCVAULT_MOCK_ID_FOR_DEMO_PURPOSES_RANDOM_CHARS'; // Update after deploy
+export const VAULT_CONTRACT_ID = 'CCLXFNILDKYZOXO26AVT56MRKJSNHF4ZVEZJKNYL3HCL6UBHIXBYOA32'; // Updated after deploy
 
 /**
  * ZenithVault: Deposit tokens
@@ -37,7 +37,7 @@ export async function depositToVault(userPublicKey, amount, signTx) {
     const contract = new StellarSdk.Contract(VAULT_CONTRACT_ID);
 
     // Native XLM SAC ID on Testnet
-    const XLM_SAC_ID = 'CAS3J7AVUOS3MTODCD3573MEXUMZ3GACZHHZ2S37OOBY2V6YV34CO3S4';
+    const XLM_SAC_ID = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
     const tx = new StellarSdk.TransactionBuilder(account, {
       fee: '1000',
@@ -78,7 +78,7 @@ export async function withdrawFromVault(userPublicKey, amount, signTx) {
     const account = await server.getAccount(userPublicKey);
     const stroops = xlmToStroops(amount);
     const contract = new StellarSdk.Contract(VAULT_CONTRACT_ID);
-    const XLM_SAC_ID = 'CAS3J7AVUOS3MTODCD3573MEXUMZ3GACZHHZ2S37OOBY2V6YV34CO3S4';
+    const XLM_SAC_ID = 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC';
 
     const tx = new StellarSdk.TransactionBuilder(account, {
       fee: '1000',

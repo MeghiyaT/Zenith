@@ -3,24 +3,15 @@
  * Address validation, formatting, and Horizon API interactions
  */
 import * as StellarSdk from '@stellar/stellar-sdk';
+import { isValidStellarAddress } from './validation';
+
+export { isValidStellarAddress };
 
 const HORIZON_URL = 'https://horizon-testnet.stellar.org';
 const BASE_RESERVE = 1; // 1 XLM
 const SUBENTRY_RESERVE = 0.5; // 0.5 XLM per subentry
 const BASE_FEE = '100'; // 100 stroops = 0.00001 XLM
 const TX_TIMEOUT_SECONDS = 300;
-
-/**
- * Validate a Stellar public key (G-address)
- */
-export function isValidStellarAddress(address) {
-  if (!address || typeof address !== 'string') return false;
-  try {
-    return StellarSdk.StrKey.isValidEd25519PublicKey(address);
-  } catch {
-    return false;
-  }
-}
 
 /**
  * Truncate an address to first 4 + last 4 chars
@@ -238,17 +229,22 @@ export function getExplorerUrl(hash) {
  */
 export async function fetchPaymentHistory(publicKey, limit = 20) {
   const server = new StellarSdk.Horizon.Server(HORIZON_URL);
-  const payments = await server
-    .payments()
+  const operations = await server
+    .operations()
     .forAccount(publicKey)
     .limit(limit)
     .order('desc')
     .call();
 
-  return payments.records
-    .filter(r => r.type === 'payment' || r.type === 'create_account')
+  return operations.records
+    .filter(r => 
+      r.type === 'payment' || 
+      r.type === 'create_account' || 
+      r.type === 'invoke_host_function'
+    )
     .map(record => {
       const isPayment = record.type === 'payment';
+      const isSoroban = record.type === 'invoke_host_function';
       const isIncoming = isPayment
         ? record.to === publicKey
         : record.account === publicKey && record.source_account !== publicKey;
@@ -256,13 +252,14 @@ export async function fetchPaymentHistory(publicKey, limit = 20) {
       return {
         id: record.id,
         type: record.type,
-        from: isPayment ? record.from : record.source_account,
-        to: isPayment ? record.to : record.account,
-        amount: isPayment ? record.amount : record.starting_balance,
+        from: isPayment ? record.from : (isSoroban ? 'Vault/Contract' : record.source_account),
+        to: isPayment ? record.to : (isSoroban ? 'Soroban' : record.account),
+        amount: isPayment ? record.amount : (record.starting_balance || (isSoroban ? '0' : '0')), // Soroban amounts are harder to extract from generic ops
         asset: isPayment ? (record.asset_type === 'native' ? 'XLM' : record.asset_code) : 'XLM',
         createdAt: record.created_at,
         hash: record.transaction_hash,
         isIncoming,
+        isContractCall: isSoroban,
       };
     });
 }
