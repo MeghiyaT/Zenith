@@ -200,7 +200,6 @@ export default function SendForm() {
 
     try {
       // Step 1: Record payment intent on Soroban contract (best-effort)
-      let contractPaymentId = null;
       try {
         const contractResult = await recordPaymentOnContract(
           publicKey,
@@ -208,7 +207,6 @@ export default function SendForm() {
           amount
         );
         if (contractResult.success && contractResult.paymentId != null) {
-          contractPaymentId = contractResult.paymentId;
           setContractStatus('confirmed');
         } else {
           setContractStatus('failed');
@@ -232,27 +230,13 @@ export default function SendForm() {
       const xdr = transaction.toXDR();
 
       // Request wallet signature
-      let signedXDR;
-      try {
-        signedXDR = await signTx(xdr);
-      } catch (signErr) {
-        throw signErr;
-      }
+      const signedXDR = await signTx(xdr);
 
       // Step 3: Broadcast to network
       setSendStep(3);
       setFormState(FORM_STATES.BROADCASTING);
 
-      let result;
-      try {
-        result = await submitTransaction(signedXDR);
-      } catch (submitErr) {
-        const extras = submitErr?.response?.data?.extras;
-        const resultCodes = extras?.result_codes;
-        const opCode = resultCodes?.operations?.[0];
-
-        throw submitErr;
-      }
+      const result = await submitTransaction(signedXDR);
 
 
       setTxHash(result.hash);
