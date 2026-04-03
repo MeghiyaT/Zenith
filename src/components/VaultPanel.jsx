@@ -91,7 +91,7 @@ export default function VaultPanel() {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
+        <div className="vault-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
           <button 
             className={`btn btn-primary ${actionLoading === 'deposit' ? 'btn-loading' : ''}`}
             onClick={handleDeposit}

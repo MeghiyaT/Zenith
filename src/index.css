@@ -1208,6 +1208,24 @@ body {
   .balance-amount {
     font-size: 24px;
   }
+
+  /* Dashboard mobile spacing */
+  .dashboard-section {
+    margin-bottom: 16px;
+  }
+
+  .container {
+    padding: 0 16px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  /* Vault mobile adjustments */
+  .vault-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* --- Utility --- */
